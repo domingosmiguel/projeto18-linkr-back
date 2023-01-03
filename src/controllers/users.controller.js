@@ -1,8 +1,11 @@
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import connection from '../database.js';
-import { insertSession, selectUser } from '../repository/users.repositories.js';
+import {
+  createUser,
+  insertSession,
+  selectUser,
+} from '../repository/users.repositories.js';
 
 dotenv.config();
 
@@ -10,10 +13,7 @@ export async function userSignUp(req, res) {
   const { email, username, password, pictureUrl } = req.body;
   try {
     const hashPassword = bcrypt.hashSync(password, 12);
-    await connection.query(
-      'INSERT INTO users (username, email, password, "pictureUrl") VALUES ($1, $2, $3, $4)',
-      [username, email, hashPassword, pictureUrl]
-    );
+    await createUser(email, username, hashPassword, pictureUrl);
     return res.sendStatus(201);
   } catch (err) {
     return res.sendStatus(500);
