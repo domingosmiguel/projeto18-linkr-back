@@ -1,6 +1,6 @@
-import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import express from 'express';
 
 import usersRouter from './routes/users.routes.js';
 
@@ -11,7 +11,7 @@ app.use(cors());
 
 app.use(usersRouter);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log(`Server runnig in port ${PORT}`);
