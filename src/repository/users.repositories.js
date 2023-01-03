@@ -1,10 +1,14 @@
 import connection from '../database.js';
 
-export const createUser = ({ email, username, hashPassword, pictureUrl }) => {
+export const createUser = (email, username, hashPassword, pictureUrl) => {
   return connection.query(
     'INSERT INTO users (username, email, password, "pictureUrl") VALUES ($1, $2, $3, $4)',
     [username, email, hashPassword, pictureUrl]
   );
+};
+
+export const findUserEmail = (email) => {
+  return connection.query('SELECT * FROM users WHERE email = $1;', [email]);
 };
 
 export const selectUser = (email) => {

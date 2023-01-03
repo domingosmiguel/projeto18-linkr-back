@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import {
   createUser,
+  findUserEmail,
   insertSession,
   selectUser,
 } from '../repository/users.repositories.js';
@@ -12,6 +13,8 @@ dotenv.config();
 export async function userSignUp(req, res) {
   const { email, username, password, pictureUrl } = req.body;
   try {
+    const userFound = await findUserEmail(email);
+    if (userFound.rowCount) return res.sendStatus(400);
     const hashPassword = bcrypt.hashSync(password, 12);
     await createUser(email, username, hashPassword, pictureUrl);
     return res.sendStatus(201);
