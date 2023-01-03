@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { userSignUp } from '../controllers/users.controller.js';
 
 const router = Router();
 

@@ -5,7 +5,7 @@ import connection from '../database.js';
 
 dotenv.config();
 
-export async function postUserSignUp(req, res) {
+export async function userSignUp(req, res) {
   const { email, username, password, pictureUrl } = req.body;
   if (password !== confirmPassword) {
     return res.sendStatus(400);
