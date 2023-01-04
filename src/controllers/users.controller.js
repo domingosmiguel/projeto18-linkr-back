@@ -31,14 +31,11 @@ export const signIn = async (req, res) => {
     } = await selectUser(email);
     if (user && bcrypt.compareSync(password, user.password)) {
       const sessionId = await insertSession(user.id);
-      const token = jwt.sign({ sessionId }, process.env.JWT_SECRET, {
-        expiresIn: '7d',
-      });
+      const token = jwt.sign({ sessionId }, process.env.JWT_SECRET);
       return res.status(200).send(token);
     }
     return res.status(401).send('Invalid email or password');
   } catch (error) {
-    console.log(error);
     return res.status(500).send('Error logging in');
   }
 };
