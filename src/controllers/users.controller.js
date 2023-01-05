@@ -32,7 +32,8 @@ export const signIn = async (req, res) => {
     if (user && bcrypt.compareSync(password, user.password)) {
       const sessionId = await insertSession(user.id);
       const token = jwt.sign({ sessionId }, process.env.JWT_SECRET);
-      return res.status(200).send(token);
+      delete user.password
+      return res.status(200).send({token, user});
     }
     return res.status(401).send('Invalid email or password');
   } catch (error) {

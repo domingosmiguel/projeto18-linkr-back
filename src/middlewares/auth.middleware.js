@@ -8,6 +8,7 @@ export default async function jwtValidation(req, res, next) {
   const {authorization} = req.headers;
   const token = authorization?.replace("Bearer ", "");
   console.log(token)
+  console.log("env:", process.env.SECRET_JWT)
 
   if(!token){
     return res.sendStatus(401)
