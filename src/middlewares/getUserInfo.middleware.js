@@ -1,3 +1,5 @@
+import { getUserById } from '../repository/users.repositories.js';
+
 export default async function (req, res, next) {
   const { userId } = res.locals;
   try {
