@@ -6,6 +6,7 @@ import {
   findUserEmail,
   insertSession,
   selectUser,
+  deleteSession,
 } from '../repository/users.repositories.js';
 
 dotenv.config();
@@ -40,3 +41,13 @@ export const signIn = async (req, res) => {
     return res.status(500).send('Error logging in');
   }
 };
+
+export async function logOut(req, res) {
+  const { sessionId } = res.locals;
+  try {
+    await deleteSession(sessionId);
+    res.sendStatus(200);
+  } catch (error) {
+    return res.sendStatus(500);
+  }
+}
