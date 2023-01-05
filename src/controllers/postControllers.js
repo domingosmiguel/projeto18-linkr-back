@@ -44,7 +44,7 @@ export async function postTimelinePosts(req, res){
 
 export async function getTimelinePosts(req, res){
     try{
-        const posts = await connection.query(`SELECT * FROM posts ORDER BY id LIMIT 20`);
+        const posts = await connection.query(`SELECT * FROM posts ORDER BY id DESC LIMIT 20`);
 
         return res.send(posts.rows).status(200);
     } catch(error){
