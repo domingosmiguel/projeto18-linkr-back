@@ -103,9 +103,28 @@ export async function getHashtagPosts(req, res) {
 export async function deletePost(req, res){
   const {id} = req.params;
   const { userId } = res.locals;
+  console.log(userId)
 
   try{
-    // await connection.query(``)
+   const post = await connection.query(`SELECT * FROM posts WHERE id = $1`, [id]);
+   if(post.rows.length===0){
+    return res.sendStatus(401)
+   }
+
+   if(post.rows[0].userId!==userId){
+    return res.sendStatus(401)
+   }
+
+   const existHashtag = await connection.query(`SELECT * FROM "postHashtags" WHERE "postId" = $1`,
+   [id]);
+   if(existHashtag.rows.length>0){
+    await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`,
+    [id])
+   }
+
+   await connection.query(`DELETE FROM posts WHERE id = $1`,
+   [id])
+
     return res.sendStatus(200)
   } catch (error){
     console.log(error);
