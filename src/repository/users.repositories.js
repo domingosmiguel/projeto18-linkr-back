@@ -25,3 +25,14 @@ export const insertSession = (userId) => {
     [userId]
   );
 };
+
+export const getUserById = (userId) => {
+  return connection.query(
+    'SELECT id, username, "pictureUrl" FROM users WHERE id = $1',
+    [userId]
+  );
+};
+
+export function deleteSession(sessionId) {
+  return connection.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+}

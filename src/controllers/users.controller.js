@@ -6,6 +6,7 @@ import {
   findUserEmail,
   insertSession,
   selectUser,
+  deleteSession,
 } from '../repository/users.repositories.js';
 
 dotenv.config();
@@ -32,11 +33,21 @@ export const signIn = async (req, res) => {
     if (user && bcrypt.compareSync(password, user.password)) {
       const sessionId = await insertSession(user.id);
       const token = jwt.sign({ sessionId }, process.env.JWT_SECRET);
-      delete user.password
-      return res.status(200).send({token, user});
+      delete user.password;
+      return res.status(200).send(token);
     }
     return res.status(401).send('Invalid email or password');
   } catch (error) {
     return res.status(500).send('Error logging in');
   }
 };
+
+export async function logOut(req, res) {
+  const { sessionId } = res.locals;
+  try {
+    await deleteSession(sessionId);
+    res.sendStatus(200);
+  } catch (error) {
+    return res.sendStatus(500);
+  }
+}
