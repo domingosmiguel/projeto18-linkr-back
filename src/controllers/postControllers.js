@@ -29,7 +29,7 @@ export async function postTimelinePosts(req, res) {
       for (const elem in hashtags) {
         const hashtagFound = await connection.query(
           'SELECT * FROM hashtags WHERE name = $1',
-          [elem]
+          [hashtags[elem]]
         );
         if (hashtagFound.rowCount) {
           await connection.query(
@@ -39,7 +39,7 @@ export async function postTimelinePosts(req, res) {
         } else {
           const hashtagCreated = await connection.query(
             'INSERT INTO hashtags (name) VALUES ($1) RETURNING id;',
-            [elem]
+            [hashtags[elem]]
           );
           await connection.query(
             'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
