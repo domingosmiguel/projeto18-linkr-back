@@ -57,13 +57,15 @@ export async function postTimelinePosts(req, res) {
 }
 
 export async function getTimelinePosts(req, res) {
-  const { user, sessionId } = res.locals;
+  const { user, sessionId, trendingHashtags } = res.locals;
   try {
     const posts = await connection.query(
       `SELECT * FROM posts ORDER BY id DESC LIMIT 20`
     );
 
-    return res.send({ posts: posts.rows, user, sessionId }).status(200);
+    return res
+      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .status(200);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);

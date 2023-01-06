@@ -5,6 +5,7 @@ import {
   getTimelinePosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
+import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
 import getUserInfo from '../middlewares/getUserInfo.middleware.js';
 import { postMiddleware } from '../middlewares/postMiddleware.js';
 
@@ -17,6 +18,12 @@ router.post(
   postTimelinePosts
 );
 
-router.get('/timeline-posts', jwtValidation, getUserInfo, getTimelinePosts);
+router.get(
+  '/timeline-posts',
+  jwtValidation,
+  getUserInfo,
+  getTrendingHashtags,
+  getTimelinePosts
+);
 
 export default router;
