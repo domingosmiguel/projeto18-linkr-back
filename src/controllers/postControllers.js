@@ -1,54 +1,101 @@
-import connection from "../database.js";
+import connection from '../database.js';
 
-export async function postTimelinePosts(req, res){
-    const bodyPost = req.bodyPost;
-    const idProvisorio = 10;
-    const hashtagsProvisórias = "#hashtag";
-    // const userId = req.locals.userId
+export async function postTimelinePosts(req, res) {
+  const body = req.body;
+  const userId = res.locals.userId;
+  let hashtags;
+  if (req.body.hashtags.length) {
+    hashtags = req.body.hashtags.map((elem) =>
+      elem.slice(1).replace(/[^a-zA-Z0-9]/g, '')
+    );
+  }
+  try {
+    const userInformations = await connection.query(
+      `SELECT * FROM users WHERE id = $1`,
+      [userId]
+    );
+    if (userInformations.rows.length === 0) {
+      return res.sendStatus(401);
+    }
 
-    console.log(bodyPost);
-   
-
-    try{
-        const userInformations = await connection.query(`SELECT * FROM users WHERE id = $1`,
-        [idProvisorio]);
-        if(userInformations.rows.length ===0){
-            return res.sendStatus(401);
-        }
-
-        const postId = await connection.query(`
+    const postId = await connection.query(
+      `
         INSERT INTO posts ("userId", txt, link, "createdAt") 
         VALUES ($1, $2, $3, NOW())
         RETURNING id`,
-        [idProvisorio, bodyPost.texto, bodyPost.link]);
-        console.log(postId.rows[0].id)
+      [userId, body.texto, body.link]
+    );
 
-        //Inserir dados na tabela hashtags
-        // const hashtagId = await connection.query(`INSERT INTO hashtags (name, "createdAt")
-        // VALUES ($1, NOW())
-        // RETURNING id`, 
-        // [hashtagsProvisórias])
-
-        //Inserir dados na tabela postHashtag
-        // await connection.query(`INSERT INTO postHashtags ("postId", "hashtagId") 
-        // VALUES ($1, $2)`, 
-        // [postId.rows[0].id, hashtagId.rows[0].id]);
-
-        return res.sendStatus(201)
-
-    } catch(error){
-        console.log(error);
-        return res.ssendStatus(500);
+    if (hashtags) {
+      const hashtagsId = [];
+      for (const elem in hashtags) {
+        const hashtagFound = await connection.query(
+          'SELECT * FROM hashtags WHERE name = $1',
+          [hashtags[elem]]
+        );
+        if (hashtagFound.rowCount) {
+          await connection.query(
+            'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
+            [postId.rows[0].id, hashtagFound.rows[0].id]
+          );
+        } else {
+          const hashtagCreated = await connection.query(
+            'INSERT INTO hashtags (name) VALUES ($1) RETURNING id;',
+            [hashtags[elem]]
+          );
+          await connection.query(
+            'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
+            [postId.rows[0].id, hashtagCreated.rows[0].id]
+          );
+        }
+      }
     }
+
+    return res.sendStatus(201);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
 }
 
-export async function getTimelinePosts(req, res){
-    try{
-        const posts = await connection.query(`SELECT * FROM posts ORDER BY id DESC LIMIT 20`);
+export async function getTimelinePosts(req, res) {
+  const { user, sessionId, trendingHashtags } = res.locals;
+  try {
+    const posts = await connection.query(
+      `SELECT users.username, users."pictureUrl", posts.txt, posts.link FROM posts
+      JOIN users ON posts."userId" = users.id 
+      ORDER BY posts.id DESC LIMIT 20`
+    );
 
-        return res.send(posts.rows).status(200);
-    } catch(error){
-        console.log(error);
-        return res.sendStatus(500);
-    }
+    return res
+      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function getHashtagPosts(req, res) {
+  const { hashtag } = req.params;
+  const { user, sessionId, trendingHashtags } = res.locals;
+  try {
+    const posts = await connection.query(
+      `
+    SELECT users.username, users."pictureUrl", posts.txt, posts.link FROM posts 
+    JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
+    JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
+    JOIN users ON posts."userId" = users.id
+    WHERE hashtags.name = $1
+    ORDER BY posts.id DESC LIMIT 20;
+    `,
+      [hashtag]
+    );
+    return res
+      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
 }
