@@ -1,17 +1,16 @@
 import connection from '../database.js';
 
 export async function postTimelinePosts(req, res) {
-  const bodyPost = req.bodyPost;
-  const idProvisorio = 10;
-  const hashtagsProvisórias = '#hashtag';
-  // const userId = req.locals.userId
-
-  console.log(bodyPost);
-
+  const body = req.body;
+  const userId = res.locals.userId;
+  let hashtags;
+  if (req.body.hashtags.length) {
+    hashtags = req.body.hashtags.map((elem) => elem.slice(1));
+  }
   try {
     const userInformations = await connection.query(
       `SELECT * FROM users WHERE id = $1`,
-      [idProvisorio]
+      [userId]
     );
     if (userInformations.rows.length === 0) {
       return res.sendStatus(401);
@@ -22,25 +21,38 @@ export async function postTimelinePosts(req, res) {
         INSERT INTO posts ("userId", txt, link, "createdAt") 
         VALUES ($1, $2, $3, NOW())
         RETURNING id`,
-      [idProvisorio, bodyPost.texto, bodyPost.link]
+      [userId, body.texto, body.link]
     );
-    console.log(postId.rows[0].id);
 
-    //Inserir dados na tabela hashtags
-    // const hashtagId = await connection.query(`INSERT INTO hashtags (name, "createdAt")
-    // VALUES ($1, NOW())
-    // RETURNING id`,
-    // [hashtagsProvisórias])
-
-    //Inserir dados na tabela postHashtag
-    // await connection.query(`INSERT INTO postHashtags ("postId", "hashtagId")
-    // VALUES ($1, $2)`,
-    // [postId.rows[0].id, hashtagId.rows[0].id]);
+    if (hashtags) {
+      const hashtagsId = [];
+      for (const elem in hashtags) {
+        const hashtagFound = await connection.query(
+          'SELECT * FROM hashtags WHERE name = $1',
+          [elem]
+        );
+        if (hashtagFound.rowCount) {
+          await connection.query(
+            'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
+            [postId.rows[0].id, hashtagFound.rows[0].id]
+          );
+        } else {
+          const hashtagCreated = await connection.query(
+            'INSERT INTO hashtags (name) VALUES ($1) RETURNING id;',
+            [elem]
+          );
+          await connection.query(
+            'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
+            [postId.rows[0].id, hashtagCreated.rows[0].id]
+          );
+        }
+      }
+    }
 
     return res.sendStatus(201);
   } catch (error) {
     console.log(error);
-    return res.ssendStatus(500);
+    return res.sendStatus(500);
   }
 }
 

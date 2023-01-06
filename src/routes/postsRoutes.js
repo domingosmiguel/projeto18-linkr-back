@@ -10,7 +10,12 @@ import { postMiddleware } from '../middlewares/postMiddleware.js';
 
 const router = Router();
 
-router.post('/timeline-posts', postMiddleware, postTimelinePosts);
+router.post(
+  '/timeline-posts',
+  jwtValidation,
+  postMiddleware,
+  postTimelinePosts
+);
 
 router.get('/timeline-posts', jwtValidation, getUserInfo, getTimelinePosts);
 
