@@ -32,3 +32,7 @@ export const getUserById = (userId) => {
     [userId]
   );
 };
+
+export function deleteSession(sessionId) {
+  return connection.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+}
