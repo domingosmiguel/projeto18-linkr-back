@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   postTimelinePosts,
   getTimelinePosts,
+  getHashtagPosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -24,6 +25,14 @@ router.get(
   getUserInfo,
   getTrendingHashtags,
   getTimelinePosts
+);
+
+router.get(
+  '/hashtag/:hashtag',
+  jwtValidation,
+  getUserInfo,
+  getTrendingHashtags,
+  getHashtagPosts
 );
 
 export default router;

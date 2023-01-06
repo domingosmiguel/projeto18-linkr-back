@@ -62,9 +62,35 @@ export async function getTimelinePosts(req, res) {
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
     const posts = await connection.query(
-      `SELECT * FROM posts ORDER BY id DESC LIMIT 20`
+      `SELECT users.username, users."pictureUrl", posts.txt, posts.link FROM posts
+      JOIN users ON posts."userId" = users.id 
+      ORDER BY posts.id DESC LIMIT 20`
     );
 
+    return res
+      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function getHashtagPosts(req, res) {
+  const { hashtag } = req.params;
+  const { user, sessionId, trendingHashtags } = res.locals;
+  try {
+    const posts = await connection.query(
+      `
+    SELECT users.username, users."pictureUrl", posts.txt, posts.link FROM posts 
+    JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
+    JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
+    JOIN users ON posts."userId" = users.id
+    WHERE hashtags.name = $1
+    ORDER BY posts.id DESC LIMIT 20;
+    `,
+      [hashtag]
+    );
     return res
       .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
       .status(200);
