@@ -5,7 +5,9 @@ export async function postTimelinePosts(req, res) {
   const userId = res.locals.userId;
   let hashtags;
   if (req.body.hashtags.length) {
-    hashtags = req.body.hashtags.map((elem) => elem.slice(1));
+    hashtags = req.body.hashtags.map((elem) =>
+      elem.slice(1).replace(/[^a-zA-Z0-9]/g, '')
+    );
   }
   try {
     const userInformations = await connection.query(
