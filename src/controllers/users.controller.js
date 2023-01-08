@@ -3,10 +3,11 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import {
   createUser,
+  deleteSession,
   findUserEmail,
+  getUserByInputSearch,
   insertSession,
   selectUser,
-  deleteSession,
 } from '../repository/users.repositories.js';
 
 dotenv.config();
@@ -19,7 +20,8 @@ export async function userSignUp(req, res) {
     const hashPassword = bcrypt.hashSync(password, 12);
     await createUser(email, username, hashPassword, pictureUrl);
     return res.sendStatus(201);
-  } catch (err) {
+  } catch (error) {
+    console.log(error);
     return res.sendStatus(500);
   }
 }
@@ -51,3 +53,14 @@ export async function logOut(req, res) {
     return res.sendStatus(500);
   }
 }
+
+export const searchUsers = async (req, res) => {
+  const { search } = req.query;
+  try {
+    const { rows: users } = await getUserByInputSearch(search);
+    return res.send(users);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};

@@ -40,3 +40,11 @@ export function deleteSession(sessionId) {
 export const getSessionById = (id) => {
   return connection.query('SELECT * FROM sessions WHERE id = $1', [id]);
 };
+
+export const getUserByInputSearch = (string) => {
+  const search = `%${string}%`;
+  return connection.query(
+    'SELECT id, username, "pictureUrl" FROM users WHERE username LIKE $1',
+    [search]
+  );
+};
