@@ -4,6 +4,7 @@ import {
   postTimelinePosts,
   getTimelinePosts,
   getHashtagPosts,
+  deletePost
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -34,5 +35,7 @@ router.get(
   getTrendingHashtags,
   getHashtagPosts
 );
+
+router.delete("/user-posts/:id", jwtValidation, deletePost)
 
 export default router;

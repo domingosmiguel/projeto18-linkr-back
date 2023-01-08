@@ -62,7 +62,7 @@ export async function getTimelinePosts(req, res) {
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
     const posts = await connection.query(
-      `SELECT users.username, users."pictureUrl", posts.txt, posts.link FROM posts
+      `SELECT users.id AS "userId", users.username, users."pictureUrl", posts.* FROM posts
       JOIN users ON posts."userId" = users.id 
       ORDER BY posts.id DESC LIMIT 20`
     );
@@ -97,5 +97,37 @@ export async function getHashtagPosts(req, res) {
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
+  }
+}
+
+export async function deletePost(req, res){
+  const {id} = req.params;
+  const { userId } = res.locals;
+  console.log(userId)
+
+  try{
+   const post = await connection.query(`SELECT * FROM posts WHERE id = $1`, [id]);
+   if(post.rows.length===0){
+    return res.sendStatus(401)
+   }
+
+   if(post.rows[0].userId!==userId){
+    return res.sendStatus(401)
+   }
+
+   const existHashtag = await connection.query(`SELECT * FROM "postHashtags" WHERE "postId" = $1`,
+   [id]);
+   if(existHashtag.rows.length>0){
+    await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`,
+    [id])
+   }
+
+   await connection.query(`DELETE FROM posts WHERE id = $1`,
+   [id])
+
+    return res.sendStatus(200)
+  } catch (error){
+    console.log(error);
+    return res.sendStatus(500)
   }
 }
