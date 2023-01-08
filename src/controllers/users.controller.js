@@ -6,6 +6,7 @@ import {
   deleteSession,
   findUserEmail,
   getUserByInputSearch,
+  getUserData,
   insertSession,
   selectUser,
 } from '../repository/users.repositories.js';
@@ -59,6 +60,17 @@ export const searchUsers = async (req, res) => {
   try {
     const { rows: users } = await getUserByInputSearch(search);
     return res.send(users);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
+export const userTimeline = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { rows: userData } = await getUserData(id);
+    return res.send(userData);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);

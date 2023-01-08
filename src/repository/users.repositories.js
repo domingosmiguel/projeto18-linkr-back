@@ -44,7 +44,25 @@ export const getSessionById = (id) => {
 export const getUserByInputSearch = (string) => {
   const search = `%${string}%`;
   return connection.query(
-    'SELECT id, username, "pictureUrl" FROM users WHERE username LIKE $1',
+    'SELECT id, username, "pictureUrl" FROM users WHERE username ILIKE $1',
     [search]
+  );
+};
+
+export const getUserData = (id) => {
+  return connection.query(
+    `SELECT users.id AS "userId",
+      users."pictureUrl",
+      users.username,
+      ARRAY_AGG(JSON_BUILD_OBJECT(
+        'id', posts.id,
+        'txt', posts.txt,
+        'link', posts.link
+      )) AS posts
+    FROM users
+    JOIN posts ON users.id = posts."userId"
+    WHERE users.id = ($1)
+    GROUP BY users.id`,
+    [id]
   );
 };
