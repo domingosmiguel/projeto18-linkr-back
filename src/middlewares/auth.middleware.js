@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import connection from '../database.js';
+import { getSessionById } from '../repository/users.repositories.js';
 
 dotenv.config();
 
@@ -14,12 +14,13 @@ export default async function jwtValidation(req, res, next) {
         rows: [{ id }],
       },
     } = jwt.verify(token, process.env.JWT_SECRET);
-    const { rowCount: loginAuthorized } = await connection.query(
-      'SELECT * FROM sessions WHERE id = $1',
-      [id]
-    );
+    const {
+      rowCount: loginAuthorized,
+      rows: [{ userId }],
+    } = await getSessionById(id);
     if (!loginAuthorized) throw new Error();
-    res.locals.userId = loginAuthorized.userId;
+    res.locals.userId = userId;
+    res.locals.sessionId = id;
     next();
   } catch {
     res.status(401).send({ message: 'Access denied' });
