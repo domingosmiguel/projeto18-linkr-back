@@ -36,3 +36,7 @@ export const getUserById = (userId) => {
 export function deleteSession(sessionId) {
   return connection.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
 }
+
+export const getSessionById = (id) => {
+  return connection.query('SELECT * FROM sessions WHERE id = $1', [id]);
+};
