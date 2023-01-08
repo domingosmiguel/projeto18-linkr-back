@@ -4,6 +4,7 @@ import {
   searchUsers,
   signIn,
   userSignUp,
+  userTimeline,
 } from '../controllers/users.controller.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import signInMiddleware from '../middlewares/signIn.middleware.js';
@@ -18,5 +19,7 @@ router.post('/signin', signInMiddleware, signIn);
 router.post('/logout', jwtValidation, logOut);
 
 router.get('/usernames', jwtValidation, searchUsers);
+
+router.get('/user/:id', jwtValidation, userTimeline);
 
 export default router;
