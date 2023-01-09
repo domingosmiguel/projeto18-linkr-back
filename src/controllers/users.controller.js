@@ -5,8 +5,9 @@ import {
   createUser,
   deleteSession,
   findUserEmail,
+  getTimelineData,
+  getUserById,
   getUserByInputSearch,
-  getUserData,
   insertSession,
   selectUser,
 } from '../repository/users.repositories.js';
@@ -68,9 +69,17 @@ export const searchUsers = async (req, res) => {
 
 export const userTimeline = async (req, res) => {
   const { id } = req.params;
+  const hashtags = res.locals.trendingHashtags;
+  const { userId } = res.locals;
+  const { sessionId } = res.locals;
   try {
-    const { rows: userData } = await getUserData(id);
-    return res.send(userData);
+    const {
+      rows: [user],
+    } = await getUserById(userId);
+    const {
+      rows: [timelineData],
+    } = await getTimelineData(id);
+    return res.send({ user, timelineData, hashtags, sessionId });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
