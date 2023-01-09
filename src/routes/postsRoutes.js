@@ -1,8 +1,8 @@
 import { Router } from 'express';
-// import jwtValidation from "../middlewares/auth.middleware.js"
 import {
   deletePost,
   getHashtagPosts,
+  updatePost,
   getTimelinePosts,
   postLikes,
   postTimelinePosts,
@@ -37,7 +37,17 @@ router.get(
   getHashtagPosts
 );
 
-router.delete('/user-posts/:id', jwtValidation, deletePost);
+router.delete(
+  "/user-posts/:id", 
+  jwtValidation, 
+  deletePost
+  );
+
+router.patch(
+  "/post-edition/:id",
+  jwtValidation,
+  updatePost
+)
 
 router.get('/:postId/likes', jwtValidation, postLikes);
 
