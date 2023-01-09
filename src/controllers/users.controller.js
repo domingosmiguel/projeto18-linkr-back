@@ -81,7 +81,7 @@ export const userTimeline = async (req, res) => {
       rows: [timelineUser],
     } = await getTlUser(id);
     const {
-      rows: [timelinePosts],
+      rows: timelinePosts,
     } = await getTlPosts(id);
     return res.send({
       user,
