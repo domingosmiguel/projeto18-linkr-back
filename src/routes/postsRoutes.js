@@ -2,14 +2,10 @@ import { Router } from 'express';
 import {
   deletePost,
   getHashtagPosts,
-<<<<<<< HEAD
-  deletePost,
-  updatePost
-=======
+  updatePost,
   getTimelinePosts,
   postLikes,
   postTimelinePosts,
->>>>>>> main
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -41,7 +37,6 @@ router.get(
   getHashtagPosts
 );
 
-<<<<<<< HEAD
 router.delete(
   "/user-posts/:id", 
   jwtValidation, 
@@ -53,10 +48,7 @@ router.patch(
   jwtValidation,
   updatePost
 )
-=======
-router.delete('/user-posts/:id', jwtValidation, deletePost);
 
 router.get('/:postId/likes', jwtValidation, postLikes);
->>>>>>> main
 
 export default router;
