@@ -103,7 +103,7 @@ export async function getHashtagPosts(req, res) {
   try {
     const posts = await connection.query(
       `
-    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId", metadatas.image, metadatas.title, metadatas.description FROM posts 
+    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId", posts.id, metadatas.image, metadatas.title, metadatas.description FROM posts 
     JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
     JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
     JOIN users ON posts."userId" = users.id
