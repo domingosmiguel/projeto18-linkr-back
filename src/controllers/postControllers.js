@@ -1,4 +1,7 @@
 import connection from '../database.js';
+import urlMetadata from 'url-metadata';
+import urlExist from 'url-exist';
+
 import {
   dislike,
   likesCount,
@@ -17,6 +20,10 @@ export async function postTimelinePosts(req, res) {
     );
   }
   try {
+    const urlExists = await urlExist(body.link);
+    if (!urlExists) {
+      return res.sendStatus(400);
+    }
     const userInformations = await connection.query(
       `SELECT * FROM users WHERE id = $1`,
       [userId]
@@ -58,6 +65,12 @@ export async function postTimelinePosts(req, res) {
       }
     }
 
+    const metadata = await urlMetadata(body.link);
+    await connection.query(
+      'INSERT INTO metadatas ("postId", image, title, description) VALUES ($1, $2, $3, $4);',
+      [postId.rows[0].id, metadata.image, metadata.title, metadata.description]
+    );
+
     return res.sendStatus(201);
   } catch (error) {
     console.log(error);
@@ -69,8 +82,9 @@ export async function getTimelinePosts(req, res) {
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
     const posts = await connection.query(
-      `SELECT users.id AS "userId", users.username, users."pictureUrl", posts.* FROM posts
-      JOIN users ON posts."userId" = users.id 
+      `SELECT users.id AS "userId", users.username, users."pictureUrl", posts.*, metadatas.image, metadatas.title, metadatas.description FROM posts
+      JOIN users ON posts."userId" = users.id
+      JOIN metadatas ON posts.id = metadatas."postId"
       ORDER BY posts.id DESC LIMIT 20`
     );
 
@@ -89,10 +103,11 @@ export async function getHashtagPosts(req, res) {
   try {
     const posts = await connection.query(
       `
-    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId" FROM posts 
+    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId", metadatas.image, metadatas.title, metadatas.description FROM posts 
     JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
     JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
     JOIN users ON posts."userId" = users.id
+    JOIN metadatas ON posts.id = metadatas."postId"
     WHERE hashtags.name = $1
     ORDER BY posts.id DESC LIMIT 20;
     `,
