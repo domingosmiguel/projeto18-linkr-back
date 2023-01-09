@@ -82,7 +82,7 @@ export async function getHashtagPosts(req, res) {
   try {
     const posts = await connection.query(
       `
-    SELECT users.username, users."pictureUrl", posts.txt, posts.link FROM posts 
+    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId" FROM posts 
     JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
     JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
     JOIN users ON posts."userId" = users.id
@@ -100,34 +100,38 @@ export async function getHashtagPosts(req, res) {
   }
 }
 
-export async function deletePost(req, res){
-  const {id} = req.params;
+export async function deletePost(req, res) {
+  const { id } = req.params;
   const { userId } = res.locals;
-  console.log(userId)
+  console.log(userId);
 
-  try{
-   const post = await connection.query(`SELECT * FROM posts WHERE id = $1`, [id]);
-   if(post.rows.length===0){
-    return res.sendStatus(401)
-   }
+  try {
+    const post = await connection.query(`SELECT * FROM posts WHERE id = $1`, [
+      id,
+    ]);
+    if (post.rows.length === 0) {
+      return res.sendStatus(401);
+    }
 
-   if(post.rows[0].userId!==userId){
-    return res.sendStatus(401)
-   }
+    if (post.rows[0].userId !== userId) {
+      return res.sendStatus(401);
+    }
 
-   const existHashtag = await connection.query(`SELECT * FROM "postHashtags" WHERE "postId" = $1`,
-   [id]);
-   if(existHashtag.rows.length>0){
-    await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`,
-    [id])
-   }
+    const existHashtag = await connection.query(
+      `SELECT * FROM "postHashtags" WHERE "postId" = $1`,
+      [id]
+    );
+    if (existHashtag.rows.length > 0) {
+      await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, [
+        id,
+      ]);
+    }
 
-   await connection.query(`DELETE FROM posts WHERE id = $1`,
-   [id])
+    await connection.query(`DELETE FROM posts WHERE id = $1`, [id]);
 
-    return res.sendStatus(200)
-  } catch (error){
+    return res.sendStatus(200);
+  } catch (error) {
     console.log(error);
-    return res.sendStatus(500)
+    return res.sendStatus(500);
   }
 }
