@@ -135,3 +135,55 @@ export async function deletePost(req, res) {
     return res.sendStatus(500);
   }
 }
+
+export async function updatePost(req, res){
+  const {id} = req.params;
+  const body = req.body;
+  let hashtags;
+  if (req.body.hashtags.length) {
+    hashtags = req.body.hashtags.map((elem) =>
+      elem.slice(1).replace(/[^a-zA-Z0-9]/g, '')
+    )
+  }
+
+  try{
+    const hashtagsPostId = await connection.query(`SELECT * FROM  "postHashtags" WHERE "postId" = $1`,
+    [id]);
+    if(hashtagsPostId.rows.length>0){
+      await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, [id])
+    }
+
+    await connection.query(`UPDATE posts SET txt=$1 WHERE id = $2;`,
+    [body.texto, id])
+
+    if (hashtags) {
+      const hashtagsId = [];
+      for (const elem in hashtags) {
+        const hashtagFound = await connection.query(
+          'SELECT * FROM hashtags WHERE name = $1',
+          [hashtags[elem]]
+        );
+        if (hashtagFound.rowCount) {
+          await connection.query(
+            'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
+            [id, hashtagFound.rows[0].id]
+          );
+        } else {
+          const hashtagCreated = await connection.query(
+            'INSERT INTO hashtags (name) VALUES ($1) RETURNING id;',
+            [hashtags[elem]]
+          );
+          await connection.query(
+            'INSERT INTO "postHashtags" ("postId", "hashtagId") values ($1, $2);',
+            [id, hashtagCreated.rows[0].id]
+          );
+        }
+      }
+    }
+
+    return res.sendStatus(201);
+  } catch (err){
+    console.log(err)
+    return res.sendStatus(500);
+  }
+}
