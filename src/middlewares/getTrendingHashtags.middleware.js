@@ -5,7 +5,7 @@ export default async function getTrendingHashtags(req, res, next) {
     const hashtags = await connection.query(`
       SELECT hashtags.name FROM "postHashtags"
       JOIN hashtags ON hashtags.id = "postHashtags"."hashtagId"
-      GROUP BY hashtags.name ORDER BY COUNT(*) DESC LIMIT 10;
+      GROUP BY hashtags.name ORDER BY COUNT(*) DESC LIMIT 14;
     `);
     res.locals.trendingHashtags = hashtags.rows;
     return next();
