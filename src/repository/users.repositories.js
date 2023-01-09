@@ -63,7 +63,8 @@ export const getTlPosts = (id) => {
     `SELECT posts.id, posts."userId", posts.txt, posts.link
     FROM users
     JOIN posts ON users.id = posts."userId"
-    WHERE users.id = ($1)`,
+    WHERE users.id = ($1)
+    ORDER BY posts.id DESC`,
     [id]
   );
 };
