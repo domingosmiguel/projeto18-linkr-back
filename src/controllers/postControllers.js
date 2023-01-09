@@ -1,6 +1,8 @@
 import connection from '../database.js';
 import {
+  dislike,
   likesCount,
+  newLike,
   userLiked,
   usersLikes,
 } from '../repository/users.repositories.js';
@@ -149,12 +151,14 @@ export const postLikes = async (req, res) => {
     const {
       rows: [{ count }],
     } = await likesCount(postId);
-    const {
-      rows: [users],
-    } = await usersLikes(postId, userId);
+    const { rows: users } = await usersLikes(postId, userId);
     const {
       rows: [{ liked }],
     } = await userLiked(postId, userId);
+
+    users.forEach((user, i) => {
+      users[i] = user.name;
+    });
 
     return res
       .send({
@@ -163,6 +167,33 @@ export const postLikes = async (req, res) => {
         liked: parseInt(liked) ? true : false,
       })
       .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
+export const likePost = async (req, res) => {
+  const { postId } = req.params;
+  const { userId } = res.locals;
+
+  try {
+    await newLike(postId, userId);
+
+    return res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+export const dislikePost = async (req, res) => {
+  const { postId } = req.params;
+  const { userId } = res.locals;
+
+  try {
+    await dislike(postId, userId);
+
+    return res.sendStatus(200);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
