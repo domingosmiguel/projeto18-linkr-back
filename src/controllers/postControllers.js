@@ -1,4 +1,9 @@
 import connection from '../database.js';
+import {
+  likesCount,
+  userLiked,
+  usersLikes,
+} from '../repository/users.repositories.js';
 
 export async function postTimelinePosts(req, res) {
   const body = req.body;
@@ -187,3 +192,31 @@ export async function updatePost(req, res){
     return res.sendStatus(500);
   }
 }
+
+export const postLikes = async (req, res) => {
+  const { postId } = req.params;
+  const { userId } = res.locals;
+
+  try {
+    const {
+      rows: [{ count }],
+    } = await likesCount(postId);
+    const {
+      rows: [users],
+    } = await usersLikes(postId, userId);
+    const {
+      rows: [{ liked }],
+    } = await userLiked(postId, userId);
+
+    return res
+      .send({
+        count: parseInt(count),
+        users: users ? users : [],
+        liked: parseInt(liked) ? true : false,
+      })
+      .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
