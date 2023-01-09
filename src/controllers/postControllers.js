@@ -24,6 +24,7 @@ export async function postTimelinePosts(req, res) {
     if (!urlExists) {
       return res.sendStatus(400);
     }
+    const metadata = await urlMetadata(body.link);
     const userInformations = await connection.query(
       `SELECT * FROM users WHERE id = $1`,
       [userId]
@@ -65,7 +66,6 @@ export async function postTimelinePosts(req, res) {
       }
     }
 
-    const metadata = await urlMetadata(body.link);
     await connection.query(
       'INSERT INTO metadatas ("postId", image, title, description) VALUES ($1, $2, $3, $4);',
       [postId.rows[0].id, metadata.image, metadata.title, metadata.description]
