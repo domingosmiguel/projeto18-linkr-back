@@ -80,9 +80,7 @@ export const userTimeline = async (req, res) => {
     const {
       rows: [timelineUser],
     } = await getTlUser(id);
-    const {
-      rows: timelinePosts,
-    } = await getTlPosts(id);
+    const { rows: timelinePosts } = await getTlPosts(id);
     return res.send({
       user,
       timelineUser,
