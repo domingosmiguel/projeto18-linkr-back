@@ -1,10 +1,11 @@
 import { Router } from 'express';
 // import jwtValidation from "../middlewares/auth.middleware.js"
 import {
-  postTimelinePosts,
-  getTimelinePosts,
+  deletePost,
   getHashtagPosts,
-  deletePost
+  getTimelinePosts,
+  postLikes,
+  postTimelinePosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -36,6 +37,8 @@ router.get(
   getHashtagPosts
 );
 
-router.delete("/user-posts/:id", jwtValidation, deletePost)
+router.delete('/user-posts/:id', jwtValidation, deletePost);
+
+router.get('/:postId/likes', jwtValidation, postLikes);
 
 export default router;

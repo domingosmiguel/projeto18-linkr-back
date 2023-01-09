@@ -22,7 +22,8 @@ export default async function jwtValidation(req, res, next) {
     res.locals.userId = userId;
     res.locals.sessionId = id;
     next();
-  } catch {
+  } catch (error) {
+    console.log(error);
     res.status(401).send({ message: 'Access denied' });
   }
 }

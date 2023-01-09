@@ -67,3 +67,33 @@ export const getTimelineData = (id) => {
     [id]
   );
 };
+
+export const likesCount = (postId) => {
+  return connection.query(
+    `SELECT COUNT(id) AS count FROM postlikes WHERE "postId" = ($1)`,
+    [postId]
+  );
+};
+
+export const usersLikes = (postId, userId) => {
+  return connection.query(
+    `SELECT users.username AS users 
+    FROM users 
+    JOIN postlikes ON postlikes."userId" = users.id
+    WHERE postlikes."postId" = ($1)
+      AND NOT "userId" = ($2)
+    ORDER BY postlikes."postId" 
+    LIMIT 2`,
+    [postId, userId]
+  );
+};
+
+export const userLiked = (postId, userId) => {
+  return connection.query(
+    `SELECT COUNT(id) AS liked 
+    FROM postlikes 
+    WHERE "postId" = ($1) 
+      AND "userId" = ($2)`,
+    [postId, userId]
+  );
+};
