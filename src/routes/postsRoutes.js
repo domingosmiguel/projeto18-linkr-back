@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import {
   deletePost,
+  dislikePost,
   getHashtagPosts,
   updatePost,
   getTimelinePosts,
+  likePost,
   postLikes,
   postTimelinePosts,
 } from '../controllers/postControllers.js';
@@ -50,5 +52,8 @@ router.patch(
 )
 
 router.get('/:postId/likes', jwtValidation, postLikes);
+
+router.post('/:postId/userLike', jwtValidation, likePost);
+router.delete('/:postId/userLike', jwtValidation, dislikePost);
 
 export default router;

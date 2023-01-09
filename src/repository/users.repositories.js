@@ -77,7 +77,7 @@ export const likesCount = (postId) => {
 
 export const usersLikes = (postId, userId) => {
   return connection.query(
-    `SELECT users.username AS users 
+    `SELECT users.username AS name 
     FROM users 
     JOIN postlikes ON postlikes."userId" = users.id
     WHERE postlikes."postId" = ($1)
@@ -93,6 +93,23 @@ export const userLiked = (postId, userId) => {
     `SELECT COUNT(id) AS liked 
     FROM postlikes 
     WHERE "postId" = ($1) 
+      AND "userId" = ($2)`,
+    [postId, userId]
+  );
+};
+
+export const newLike = (postId, userId) => {
+  return connection.query(
+    `INSERT INTO postlikes ("postId", "userId")
+    VALUES ($1, $2)`,
+    [postId, userId]
+  );
+};
+
+export const dislike = (postId, userId) => {
+  return connection.query(
+    `DELETE FROM postlikes 
+    WHERE "postId" = ($1)
       AND "userId" = ($2)`,
     [postId, userId]
   );
