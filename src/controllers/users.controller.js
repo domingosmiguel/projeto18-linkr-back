@@ -5,7 +5,8 @@ import {
   createUser,
   deleteSession,
   findUserEmail,
-  getTimelineData,
+  getTlPosts,
+  getTlUser,
   getUserById,
   getUserByInputSearch,
   insertSession,
@@ -77,9 +78,18 @@ export const userTimeline = async (req, res) => {
       rows: [user],
     } = await getUserById(userId);
     const {
-      rows: [timelineData],
-    } = await getTimelineData(id);
-    return res.send({ user, timelineData, hashtags, sessionId });
+      rows: [timelineUser],
+    } = await getTlUser(id);
+    const {
+      rows: [timelinePosts],
+    } = await getTlPosts(id);
+    return res.send({
+      user,
+      timelineUser,
+      timelinePosts: timelinePosts || [],
+      hashtags,
+      sessionId,
+    });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);

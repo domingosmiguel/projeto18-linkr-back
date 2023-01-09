@@ -236,7 +236,7 @@ export const postLikes = async (req, res) => {
     return res
       .send({
         count: parseInt(count),
-        users: users ? users : [],
+        users: users || [],
         liked: parseInt(liked) ? true : false,
       })
       .status(200);
