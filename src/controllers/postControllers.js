@@ -142,21 +142,27 @@ export async function deletePost(req, res) {
 }
 
 export const postLikes = async (req, res) => {
-  const { postId } = req.body;
+  const { postId } = req.params;
   const { userId } = res.locals;
 
   try {
     const {
-      rows: [count],
+      rows: [{ count }],
     } = await likesCount(postId);
     const {
       rows: [users],
     } = await usersLikes(postId, userId);
     const {
-      rows: [liked],
+      rows: [{ liked }],
     } = await userLiked(postId, userId);
 
-    return res.send({ count, users, liked: liked ? true : false }).status(200);
+    return res
+      .send({
+        count: parseInt(count),
+        users: users ? users : [],
+        liked: parseInt(liked) ? true : false,
+      })
+      .status(200);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);

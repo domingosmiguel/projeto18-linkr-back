@@ -75,9 +75,9 @@ export const likesCount = (postId) => {
   );
 };
 
-export const usersLikes = (postId) => {
+export const usersLikes = (postId, userId) => {
   return connection.query(
-    `SELECT usernames.* AS users 
+    `SELECT users.username AS users 
     FROM users 
     JOIN postlikes ON postlikes."userId" = users.id
     WHERE postlikes."postId" = ($1)

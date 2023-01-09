@@ -39,6 +39,6 @@ router.get(
 
 router.delete('/user-posts/:id', jwtValidation, deletePost);
 
-router.get('/postLikes', jwtValidation, postLikes);
+router.get('/:postId/likes', jwtValidation, postLikes);
 
 export default router;
