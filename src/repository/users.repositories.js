@@ -49,21 +49,21 @@ export const getUserByInputSearch = (string) => {
   );
 };
 
-export const getTimelineData = (id) => {
+export const getTlUser = (id) => {
   return connection.query(
-    `SELECT users.id AS "userId",
-      users."pictureUrl",
-      users.username,
-      ARRAY_AGG(JSON_BUILD_OBJECT(
-        'id', posts.id,
-        'userId', posts."userId",
-        'txt', posts.txt,
-        'link', posts.link
-      )) AS posts
+    `SELECT users."pictureUrl", users.username
+    FROM users
+    WHERE users.id = ($1)`,
+    [id]
+  );
+};
+
+export const getTlPosts = (id) => {
+  return connection.query(
+    `SELECT posts.id, posts."userId", posts.txt, posts.link
     FROM users
     JOIN posts ON users.id = posts."userId"
-    WHERE users.id = ($1)
-    GROUP BY users.id`,
+    WHERE users.id = ($1)`,
     [id]
   );
 };

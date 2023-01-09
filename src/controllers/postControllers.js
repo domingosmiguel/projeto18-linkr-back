@@ -143,25 +143,31 @@ export async function deletePost(req, res) {
   }
 }
 
-export async function updatePost(req, res){
-  const {id} = req.params;
+export async function updatePost(req, res) {
+  const { id } = req.params;
   const body = req.body;
   let hashtags;
   if (req.body.hashtags.length) {
     hashtags = req.body.hashtags.map((elem) =>
       elem.slice(1).replace(/[^a-zA-Z0-9]/g, '')
-    )
+    );
   }
 
-  try{
-    const hashtagsPostId = await connection.query(`SELECT * FROM  "postHashtags" WHERE "postId" = $1`,
-    [id]);
-    if(hashtagsPostId.rows.length>0){
-      await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, [id])
+  try {
+    const hashtagsPostId = await connection.query(
+      `SELECT * FROM  "postHashtags" WHERE "postId" = $1`,
+      [id]
+    );
+    if (hashtagsPostId.rows.length > 0) {
+      await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, [
+        id,
+      ]);
     }
 
-    await connection.query(`UPDATE posts SET txt=$1 WHERE id = $2;`,
-    [body.texto, id])
+    await connection.query(`UPDATE posts SET txt=$1 WHERE id = $2;`, [
+      body.texto,
+      id,
+    ]);
 
     if (hashtags) {
       const hashtagsId = [];
@@ -189,8 +195,8 @@ export async function updatePost(req, res){
     }
 
     return res.sendStatus(201);
-  } catch (err){
-    console.log(err)
+  } catch (err) {
+    console.log(err);
     return res.sendStatus(500);
   }
 }
@@ -215,7 +221,7 @@ export const postLikes = async (req, res) => {
     return res
       .send({
         count: parseInt(count),
-        users: users ? users : [],
+        users: users || [],
         liked: parseInt(liked) ? true : false,
       })
       .status(200);
