@@ -28,7 +28,7 @@ export const insertSession = (userId) => {
 
 export const getUserById = (userId) => {
   return connection.query(
-    'SELECT id, username, "pictureUrl" FROM users WHERE id = $1',
+    'SELECT id, username, "pictureUrl" FROM users WHERE id = $1 LIMIT 1',
     [userId]
   );
 };
@@ -49,13 +49,14 @@ export const getUserByInputSearch = (string) => {
   );
 };
 
-export const getUserData = (id) => {
+export const getTimelineData = (id) => {
   return connection.query(
     `SELECT users.id AS "userId",
       users."pictureUrl",
       users.username,
       ARRAY_AGG(JSON_BUILD_OBJECT(
         'id', posts.id,
+        'userId', posts."userId",
         'txt', posts.txt,
         'link', posts.link
       )) AS posts
