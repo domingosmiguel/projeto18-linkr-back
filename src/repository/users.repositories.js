@@ -49,6 +49,17 @@ export const getUserByInputSearch = (string) => {
   );
 };
 
+export const getUserURFollowing = (usersIds, userId) => {
+  return connection.query(
+    `SELECT users.id, users.username, users."pictureUrl" 
+    FROM users 
+    JOIN follows ON follows.following = users.id
+    WHERE follows.following = ANY($1)
+      AND follows.follower = ($2)`,
+    [usersIds, userId]
+  );
+};
+
 export const getTlUser = (id) => {
   return connection.query(
     `SELECT users.id, users."pictureUrl", users.username
