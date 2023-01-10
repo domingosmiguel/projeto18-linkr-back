@@ -9,6 +9,8 @@ import {
   newLike,
   userLiked,
   usersLikes,
+  getFollowing,
+  timeline,
 } from '../repository/users.repositories.js';
 
 export async function postTimelinePosts(req, res) {
@@ -80,17 +82,20 @@ export async function postTimelinePosts(req, res) {
 }
 
 export async function getTimelinePosts(req, res) {
-  const { user, sessionId, trendingHashtags } = res.locals;
+  const { user, userId, sessionId, trendingHashtags } = res.locals;
+
   try {
-    const posts = await connection.query(
-      `SELECT users.id AS "userId", users.username, users."pictureUrl", posts.*, metadatas.image, metadatas.title, metadatas.description FROM posts
-      JOIN users ON posts."userId" = users.id
-      JOIN metadatas ON posts.id = metadatas."postId"
-      ORDER BY posts.id DESC LIMIT 20`
-    );
+    const { rows: following } = await getFollowing(userId);
+    following.forEach((user, i) => (following[i] = user.following));
+
+    let posts = [];
+    if (following.length > 0) {
+      const { rows } = await timeline(following);
+      posts = rows;
+    }
 
     return res
-      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .send({ following, posts, user, sessionId, hashtags: trendingHashtags })
       .status(200);
   } catch (error) {
     console.log(error);
