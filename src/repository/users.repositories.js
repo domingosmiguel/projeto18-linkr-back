@@ -51,7 +51,7 @@ export const getUserByInputSearch = (string) => {
 
 export const getTlUser = (id) => {
   return connection.query(
-    `SELECT users."pictureUrl", users.username
+    `SELECT users.id, users."pictureUrl", users.username
     FROM users
     WHERE users.id = ($1)`,
     [id]
@@ -71,7 +71,7 @@ export const getTlPosts = (id) => {
 
 export const likesCount = (postId) => {
   return connection.query(
-    `SELECT COUNT(id) AS count FROM postlikes WHERE "postId" = ($1)`,
+    `SELECT COUNT(id) AS count FROM "postLikes" WHERE "postId" = ($1)`,
     [postId]
   );
 };
@@ -80,10 +80,10 @@ export const usersLikes = (postId, userId) => {
   return connection.query(
     `SELECT users.username AS name 
     FROM users 
-    JOIN postlikes ON postlikes."userId" = users.id
-    WHERE postlikes."postId" = ($1)
+    JOIN "postLikes" ON "postLikes"."userId" = users.id
+    WHERE "postLikes"."postId" = ($1)
       AND NOT "userId" = ($2)
-    ORDER BY postlikes."postId" 
+    ORDER BY "postLikes"."postId" 
     LIMIT 2`,
     [postId, userId]
   );
@@ -92,7 +92,7 @@ export const usersLikes = (postId, userId) => {
 export const userLiked = (postId, userId) => {
   return connection.query(
     `SELECT COUNT(id) AS liked 
-    FROM postlikes 
+    FROM "postLikes" 
     WHERE "postId" = ($1) 
       AND "userId" = ($2)`,
     [postId, userId]
@@ -101,7 +101,7 @@ export const userLiked = (postId, userId) => {
 
 export const newLike = (postId, userId) => {
   return connection.query(
-    `INSERT INTO postlikes ("postId", "userId")
+    `INSERT INTO "postLikes" ("postId", "userId")
     VALUES ($1, $2)`,
     [postId, userId]
   );
@@ -109,9 +109,37 @@ export const newLike = (postId, userId) => {
 
 export const dislike = (postId, userId) => {
   return connection.query(
-    `DELETE FROM postlikes 
+    `DELETE FROM "postLikes" 
     WHERE "postId" = ($1)
       AND "userId" = ($2)`,
     [postId, userId]
+  );
+};
+
+export const checkFollow = (id, userId) => {
+  return connection.query(
+    `SELECT COUNT(id) AS "isFollower"
+    FROM follows
+    WHERE following = ($1)
+      AND follower = ($2)`,
+    [id, userId]
+  );
+};
+
+export const newFollower = (id, userId) => {
+  return connection.query(
+    `INSERT INTO follows (following, follower)
+    VALUES ($1, $2)
+    ON CONFLICT (following, follower) DO NOTHING`,
+    [id, userId]
+  );
+};
+
+export const rmFollower = (id, userId) => {
+  return connection.query(
+    `DELETE FROM follows
+    WHERE following = ($1)
+      AND follower = ($2)`,
+    [id, userId]
   );
 };

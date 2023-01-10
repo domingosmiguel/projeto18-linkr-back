@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import {
+  checkFollow,
   createUser,
   deleteSession,
   findUserEmail,
@@ -10,6 +11,8 @@ import {
   getUserById,
   getUserByInputSearch,
   insertSession,
+  newFollower,
+  rmFollower,
   selectUser,
 } from '../repository/users.repositories.js';
 
@@ -39,7 +42,7 @@ export const signIn = async (req, res) => {
       const sessionId = await insertSession(user.id);
       const token = jwt.sign({ sessionId }, process.env.JWT_SECRET);
       delete user.password;
-      return res.status(200).send(token);
+      return res.send(token);
     }
     return res.status(401).send('Invalid email or password');
   } catch (error) {
@@ -88,6 +91,49 @@ export const userTimeline = async (req, res) => {
       hashtags,
       sessionId,
     });
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
+export const seeIfFollow = async (req, res) => {
+  const { userId } = res.locals;
+  const { id } = req.params;
+
+  try {
+    const {
+      rows: [{ isFollower }],
+    } = await checkFollow(id, userId);
+    return res.send({
+      isFollower: parseInt(isFollower) ? true : false,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
+export const postNewFollow = async (req, res) => {
+  const { userId } = res.locals;
+  const { id } = req.params;
+
+  try {
+    await newFollower(id, userId);
+    return res.sendStatus(201);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
+export const deleteFollow = async (req, res) => {
+  const { userId } = res.locals;
+  const { id } = req.params;
+
+  try {
+    await rmFollower(id, userId);
+    return res.sendStatus(200);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
