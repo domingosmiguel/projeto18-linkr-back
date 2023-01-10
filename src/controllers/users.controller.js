@@ -10,6 +10,7 @@ import {
   getTlUser,
   getUserById,
   getUserByInputSearch,
+  getUserURFollowing,
   insertSession,
   newFollower,
   rmFollower,
@@ -62,9 +63,35 @@ export async function logOut(req, res) {
 
 export const searchUsers = async (req, res) => {
   const { search } = req.query;
+  const { userId } = res.locals;
+
   try {
-    const { rows: users } = await getUserByInputSearch(search);
-    return res.send(users);
+    const { rows: searchUsers } = await getUserByInputSearch(search);
+    const searchUsersIds = searchUsers.map((user) => user.id);
+    const { rows: searchUsersFollowing } = await getUserURFollowing(
+      searchUsersIds,
+      userId
+    );
+    const allUsers = searchUsersFollowing;
+    searchUsers.forEach((user) => allUsers.push(user));
+
+    const seen = {};
+    const totalLength = allUsers.length;
+
+    let response = [];
+    let j = 0;
+
+    for (let i = 0; i < totalLength; i++) {
+      let item = allUsers[i];
+      let id = item.id;
+      if (seen[id] === undefined) {
+        seen[id] = j;
+        response[j++] = { ...item, following: false };
+      } else {
+        response[seen[id]] = { ...item, following: true };
+      }
+    }
+    return res.send(response);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
