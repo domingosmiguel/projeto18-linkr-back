@@ -1,6 +1,7 @@
 import connection from '../database.js';
 import urlMetadata from 'url-metadata';
 import urlExist from 'url-exist';
+import { countNewPosts } from '../repository/posts.repositories.js';
 
 import {
   dislike,
@@ -272,3 +273,13 @@ export const dislikePost = async (req, res) => {
     return res.sendStatus(500);
   }
 };
+
+export async function getNewPosts(req, res) {
+  const { id } = req.params;
+  try {
+    const number = await countNewPosts(id);
+    return res.send(number.rows[0].number);
+  } catch (error) {
+    return res.sendStatus(500);
+  }
+}
