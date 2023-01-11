@@ -342,7 +342,13 @@ export async function getComments(req, res){
     const {id} = req.params;
 
     try{
-      const comments = await connection.query(`SELECT * FROM comments WHERE "postId" = $1`,
+      const comments = await connection.query(`
+      SELECT users.username, users."pictureUrl", comments.* 
+      FROM users 
+      LEFT JOIN comments 
+      ON users.id = comments."userId" 
+      WHERE comments."postId" = $1;
+      `,
       [id])
       return res.status(200).send(comments.rows);
     } catch(error){
