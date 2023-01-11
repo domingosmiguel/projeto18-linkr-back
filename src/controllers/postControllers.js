@@ -265,6 +265,7 @@ export const likePost = async (req, res) => {
     return res.sendStatus(500);
   }
 };
+
 export const dislikePost = async (req, res) => {
   const { postId } = req.params;
   const { userId } = res.locals;
@@ -285,6 +286,36 @@ export async function getNewPosts(req, res) {
     const number = await countNewPosts(id);
     return res.send(number.rows[0].number);
   } catch (error) {
+    return res.sendStatus(500);
+  }
+}
+
+export async function publishComment(req, res){
+  const body = req.body;
+  const {id} = req.params;
+  const idUser =  res.locals.userId;
+
+  try{
+    const idPostExist = await connection.query(`SELECT * FROM posts WHERE id = $1`,
+    [id]);
+    if(idPostExist.rows.length ===0){
+      return res.sendStatus(401);
+    }
+
+    const idUserExist = await connection.query(`SELECT * FROM users WHERE id = $1`,
+    [idUser]);
+    if(idPostExist.rows.length===0){
+      return res.status(401).send("Usuário inexistente")
+    }
+
+    await connection.query(`
+      INSERT INTO comments ("postId", "userId", txt, "createdAt") 
+      VALUES ($1, $2, $3, NOW())`,
+      [id, idUser, body.comment]);
+
+    return res.sendStatus(201);
+  } catch (error){
+    console.log(error);
     return res.sendStatus(500);
   }
 }

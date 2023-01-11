@@ -9,11 +9,13 @@ import {
   postLikes,
   postTimelinePosts,
   getNewPosts,
+  publishComment
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
 import getUserInfo from '../middlewares/getUserInfo.middleware.js';
 import { postMiddleware } from '../middlewares/postMiddleware.js';
+import {commentMiddleware} from "../middlewares/commentMiddleware.js";
 
 const router = Router();
 
@@ -47,8 +49,11 @@ router.patch('/post-edition/:id', jwtValidation, updatePost);
 router.get('/:postId/likes', jwtValidation, postLikes);
 
 router.post('/:postId/userLike', jwtValidation, likePost);
+
 router.delete('/:postId/userLike', jwtValidation, dislikePost);
 
 router.get('/new-posts/:id', jwtValidation, getNewPosts);
+
+router.post('/post-comment/:id', jwtValidation, commentMiddleware, publishComment);
 
 export default router;
