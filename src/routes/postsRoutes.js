@@ -9,7 +9,8 @@ import {
   postLikes,
   postTimelinePosts,
   getNewPosts,
-  publishComment
+  publishComment,
+  getComments
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -55,5 +56,7 @@ router.delete('/:postId/userLike', jwtValidation, dislikePost);
 router.get('/new-posts/:id', jwtValidation, getNewPosts);
 
 router.post('/post-comment/:id', jwtValidation, commentMiddleware, publishComment);
+
+router.get('/post-comment/:id', jwtValidation, getComments)
 
 export default router;
