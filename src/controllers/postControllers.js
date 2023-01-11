@@ -319,3 +319,34 @@ export async function publishComment(req, res){
     return res.sendStatus(500);
   }
 }
+
+export async function getAllComments(req, res) {
+  const { id } = req.params;
+  try {
+    const {
+      rows: [{ count }],
+    } = await connection.query(
+      `SELECT COUNT(COALESCE(id, 0))
+      FROM comments 
+      WHERE "postId" = ($1)`,
+      [id]
+    );
+    return res.status(200).send(count);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function getComments(req, res){
+    const {id} = req.params;
+
+    try{
+      const comments = await connection.query(`SELECT * FROM comments WHERE "postId" = $1`,
+      [id])
+      return res.status(200).send(comments.rows);
+    } catch(error){
+      console.log(error)
+      return res.sendStatus(500)
+    }
+}
