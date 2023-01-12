@@ -1,7 +1,16 @@
 import connection from '../database.js';
 import urlMetadata from 'url-metadata';
 import urlExist from 'url-exist';
-import { countNewPosts } from '../repository/posts.repositories.js';
+import {
+  checkForMoreHashtagPosts,
+  checkForMorePosts,
+  countNewHashtagPosts,
+  countNewPosts,
+  getHashtagPostsQuery,
+  loadHashtagPosts,
+  loadPosts,
+  timeline,
+} from '../repository/posts.repositories.js';
 
 import {
   dislike,
@@ -10,7 +19,6 @@ import {
   userLiked,
   usersLikes,
   getFollowing,
-  timeline,
 } from '../repository/users.repositories.js';
 
 export async function postTimelinePosts(req, res) {
@@ -87,16 +95,58 @@ export async function getTimelinePosts(req, res) {
   try {
     const { rows: following } = await getFollowing(userId);
     following.forEach((user, i) => (following[i] = user.following));
-
+    let hasMore = false;
     let posts = [];
     if (following.length > 0) {
       const { rows } = await timeline(following);
       posts = rows;
+      if (posts) {
+        const count = await checkForMorePosts(
+          posts[posts.length - 1].createdAt,
+          following
+        );
+        if (count.rowCount) hasMore = true;
+      }
     }
 
     return res
-      .send({ following, posts, user, sessionId, hashtags: trendingHashtags })
+      .send({
+        following,
+        posts,
+        user,
+        sessionId,
+        hashtags: trendingHashtags,
+        hasMore,
+      })
       .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function loadMorePosts(req, res) {
+  const { timestamp } = req.params;
+  const { userId } = res.locals;
+
+  try {
+    const { rows: following } = await getFollowing(userId);
+    following.forEach((user, i) => (following[i] = user.following));
+
+    let posts = [];
+    if (following.length > 0) {
+      const { rows } = await loadPosts(following, timestamp);
+      posts = rows;
+    }
+    const count = await checkForMorePosts(
+      posts[posts.length - 1].createdAt,
+      following
+    );
+
+    let hasMore = false;
+    if (count.rowCount) hasMore = true;
+
+    return res.send({ following, posts, hasMore }).status(200);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
@@ -107,20 +157,47 @@ export async function getHashtagPosts(req, res) {
   const { hashtag } = req.params;
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
-    const posts = await connection.query(
-      `
-    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId", posts.id, metadatas.image, metadatas.title, metadatas.description FROM posts 
-    JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
-    JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
-    JOIN users ON posts."userId" = users.id
-    JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE hashtags.name = $1
-    ORDER BY posts.id DESC LIMIT 20;
-    `,
-      [hashtag]
-    );
+    const { rows: posts } = await getHashtagPostsQuery(hashtag);
+    let hasMore = false;
+    if (posts.length) {
+      const count = await checkForMoreHashtagPosts(
+        hashtag,
+        posts[posts.length - 1].createdAt
+      );
+      if (count.rowCount) hasMore = true;
+    }
     return res
-      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .send({
+        posts,
+        user,
+        sessionId,
+        hashtags: trendingHashtags,
+        hasMore,
+      })
+      .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function loadMoreHashtagPosts(req, res) {
+  const { hashtag, timestamp } = req.params;
+  try {
+    const { rows: posts } = await loadHashtagPosts(hashtag, timestamp);
+    const count = await checkForMoreHashtagPosts(
+      hashtag,
+      posts[posts.length - 1].createdAt
+    );
+
+    let hasMore = false;
+    if (count.rowCount) hasMore = true;
+
+    return res
+      .send({
+        posts,
+        hasMore,
+      })
       .status(200);
   } catch (error) {
     console.log(error);
@@ -281,40 +358,58 @@ export const dislikePost = async (req, res) => {
 };
 
 export async function getNewPosts(req, res) {
-  const { id } = req.params;
+  const { timestamp } = req.params;
+  const { userId } = res.locals;
   try {
-    const number = await countNewPosts(id);
-    return res.send(number.rows[0].number);
+    const number = await countNewPosts(timestamp, userId);
+    return res.send({ number: number.rows[0].number - 1 });
   } catch (error) {
     return res.sendStatus(500);
   }
 }
 
-export async function publishComment(req, res){
-  const body = req.body;
-  const {id} = req.params;
-  const idUser =  res.locals.userId;
+export async function getNewHashtagPosts(req, res) {
+  const { hashtag, timestamp } = req.params;
+  try {
+    const number = await countNewHashtagPosts(hashtag, timestamp);
+    return res.send({ number: number.rows[0].number - 1 });
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
 
-  try{
-    const idPostExist = await connection.query(`SELECT * FROM posts WHERE id = $1`,
-    [id]);
-    if(idPostExist.rows.length ===0){
+export async function publishComment(req, res) {
+  const body = req.body;
+  const { id } = req.params;
+  const idUser = res.locals.userId;
+
+  try {
+    const idPostExist = await connection.query(
+      `SELECT * FROM posts WHERE id = $1`,
+      [id]
+    );
+    if (idPostExist.rows.length === 0) {
       return res.sendStatus(401);
     }
 
-    const idUserExist = await connection.query(`SELECT * FROM users WHERE id = $1`,
-    [idUser]);
-    if(idPostExist.rows.length===0){
-      return res.status(401).send("Usuário inexistente")
+    const idUserExist = await connection.query(
+      `SELECT * FROM users WHERE id = $1`,
+      [idUser]
+    );
+    if (idPostExist.rows.length === 0) {
+      return res.status(401).send('Usuário inexistente');
     }
 
-    await connection.query(`
+    await connection.query(
+      `
       INSERT INTO comments ("postId", "userId", txt, "createdAt") 
       VALUES ($1, $2, $3, NOW())`,
-      [id, idUser, body.comment]);
+      [id, idUser, body.comment]
+    );
 
     return res.sendStatus(201);
-  } catch (error){
+  } catch (error) {
     console.log(error);
     return res.sendStatus(500);
   }
@@ -338,11 +433,12 @@ export async function getAllComments(req, res) {
   }
 }
 
-export async function getComments(req, res){
-    const {id} = req.params;
+export async function getComments(req, res) {
+  const { id } = req.params;
 
-    try{
-      const comments = await connection.query(`
+  try {
+    const comments = await connection.query(
+      `
       SELECT users.username, users."pictureUrl", 
       comments.*, 
       posts."userId" AS "quemPostou" 
@@ -353,10 +449,11 @@ export async function getComments(req, res){
       ON comments."postId" = posts.id 
       WHERE posts.id = $1;
       `,
-      [id])
-      return res.status(200).send(comments.rows);
-    } catch(error){
-      console.log(error)
-      return res.sendStatus(500)
-    }
+      [id]
+    );
+    return res.status(200).send(comments.rows);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
 }

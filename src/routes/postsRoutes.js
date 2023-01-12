@@ -11,13 +11,16 @@ import {
   getNewPosts,
   publishComment,
   getAllComments,
-  getComments
+  getComments,
+  loadMorePosts,
+  loadMoreHashtagPosts,
+  getNewHashtagPosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
 import getUserInfo from '../middlewares/getUserInfo.middleware.js';
 import { postMiddleware } from '../middlewares/postMiddleware.js';
-import {commentMiddleware} from "../middlewares/commentMiddleware.js";
+import { commentMiddleware } from '../middlewares/commentMiddleware.js';
 
 const router = Router();
 
@@ -36,6 +39,8 @@ router.get(
   getTimelinePosts
 );
 
+router.get('/timeline-posts/:timestamp', jwtValidation, loadMorePosts);
+
 router.get(
   '/hashtag/:hashtag',
   jwtValidation,
@@ -43,6 +48,8 @@ router.get(
   getTrendingHashtags,
   getHashtagPosts
 );
+
+router.get('/hashtag/:hashtag/:timestamp', jwtValidation, loadMoreHashtagPosts);
 
 router.delete('/user-posts/:id', jwtValidation, deletePost);
 
@@ -54,12 +61,23 @@ router.post('/:postId/userLike', jwtValidation, likePost);
 
 router.delete('/:postId/userLike', jwtValidation, dislikePost);
 
-router.get('/new-posts/:id', jwtValidation, getNewPosts);
+router.get('/new-posts/:timestamp', jwtValidation, getNewPosts);
 
-router.post('/post-comment/:id', jwtValidation, commentMiddleware, publishComment);
+router.get(
+  '/new-hashtag-posts/:hashtag/:timestamp',
+  jwtValidation,
+  getNewHashtagPosts
+);
 
-router.get('/post-comments-all/:id', jwtValidation, getAllComments)
+router.post(
+  '/post-comment/:timestamp',
+  jwtValidation,
+  commentMiddleware,
+  publishComment
+);
 
-router.get('/post-comment/:id', jwtValidation, getComments)
+router.get('/post-comments-all/:id', jwtValidation, getAllComments);
+
+router.get('/post-comment/:id', jwtValidation, getComments);
 
 export default router;

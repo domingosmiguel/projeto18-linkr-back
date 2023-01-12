@@ -71,11 +71,13 @@ export const getTlUser = (id) => {
 
 export const getTlPosts = (id) => {
   return connection.query(
-    `SELECT posts.id, posts."userId", posts.txt, posts.link
-    FROM users
-    JOIN posts ON users.id = posts."userId"
+    `SELECT posts.id, posts."userId", posts.txt, posts.link, posts."createdAt"
+      metadatas.image, metadatas.title, metadatas.description 
+    FROM posts
+    JOIN users ON users.id = posts."userId"
+    JOIN metadatas ON posts.id = metadatas."postId"
     WHERE users.id = ($1)
-    ORDER BY posts.id DESC`,
+    ORDER BY posts."createdAt" DESC`,
     [id]
   );
 };
@@ -161,21 +163,5 @@ export const getFollowing = (userId) => {
     FROM follows
     WHERE follower = ($1)`,
     [userId]
-  );
-};
-export const timeline = (usersIds) => {
-  return connection.query(
-    `SELECT users.username, 
-      users."pictureUrl", 
-      posts.*, 
-      metadatas.image, 
-      metadatas.title, 
-      metadatas.description 
-    FROM posts
-    JOIN users ON posts."userId" = users.id
-    JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE users.id = ANY($1)
-    ORDER BY posts.id DESC`,
-    [usersIds]
   );
 };
