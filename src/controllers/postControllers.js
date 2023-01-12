@@ -95,20 +95,19 @@ export async function getTimelinePosts(req, res) {
   try {
     const { rows: following } = await getFollowing(userId);
     following.forEach((user, i) => (following[i] = user.following));
-
+    let hasMore = false;
     let posts = [];
     if (following.length > 0) {
       const { rows } = await timeline(following);
       posts = rows;
+      if (posts) {
+        const count = await checkForMorePosts(
+          posts[posts.length - 1].id,
+          following
+        );
+        if (count.rowCount) hasMore = true;
+      }
     }
-
-    const count = await checkForMorePosts(
-      posts[posts.length - 1].id,
-      following
-    );
-
-    let hasMore = false;
-    if (count.rowCount) hasMore = true;
 
     return res
       .send({
