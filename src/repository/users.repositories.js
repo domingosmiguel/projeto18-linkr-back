@@ -175,7 +175,7 @@ export const timeline = (usersIds) => {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE users.id = ANY($1)
-    ORDER BY posts.id DESC`,
+    ORDER BY posts.id DESC LIMIT 10;`,
     [usersIds]
   );
 };

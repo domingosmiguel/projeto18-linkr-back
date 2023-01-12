@@ -1,7 +1,11 @@
 import connection from '../database.js';
 import urlMetadata from 'url-metadata';
 import urlExist from 'url-exist';
-import { countNewPosts } from '../repository/posts.repositories.js';
+import {
+  checkForMorePosts,
+  countNewPosts,
+  loadPosts,
+} from '../repository/posts.repositories.js';
 
 import {
   dislike,
@@ -94,9 +98,52 @@ export async function getTimelinePosts(req, res) {
       posts = rows;
     }
 
+    const count = await checkForMorePosts(
+      posts[posts.length - 1].id,
+      following
+    );
+
+    let hasMore = false;
+    if (count.rowCount) hasMore = true;
+
     return res
-      .send({ following, posts, user, sessionId, hashtags: trendingHashtags })
+      .send({
+        following,
+        posts,
+        user,
+        sessionId,
+        hashtags: trendingHashtags,
+        hasMore,
+      })
       .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function loadMorePosts(req, res) {
+  const { id } = req.params;
+  const { userId } = res.locals;
+
+  try {
+    const { rows: following } = await getFollowing(userId);
+    following.forEach((user, i) => (following[i] = user.following));
+
+    let posts = [];
+    if (following.length > 0) {
+      const { rows } = await loadPosts(following);
+      posts = rows;
+    }
+    const count = await checkForMorePosts(
+      posts[posts.length - 1].id,
+      following
+    );
+
+    let hasMore = false;
+    if (count.rowCount) hasMore = true;
+
+    return res.send({ following, posts, hasMore }).status(200);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
@@ -282,39 +329,46 @@ export const dislikePost = async (req, res) => {
 
 export async function getNewPosts(req, res) {
   const { id } = req.params;
+  const { userId } = res.locals;
   try {
-    const number = await countNewPosts(id);
+    const number = await countNewPosts(id, userId);
     return res.send(number.rows[0].number);
   } catch (error) {
     return res.sendStatus(500);
   }
 }
 
-export async function publishComment(req, res){
+export async function publishComment(req, res) {
   const body = req.body;
-  const {id} = req.params;
-  const idUser =  res.locals.userId;
+  const { id } = req.params;
+  const idUser = res.locals.userId;
 
-  try{
-    const idPostExist = await connection.query(`SELECT * FROM posts WHERE id = $1`,
-    [id]);
-    if(idPostExist.rows.length ===0){
+  try {
+    const idPostExist = await connection.query(
+      `SELECT * FROM posts WHERE id = $1`,
+      [id]
+    );
+    if (idPostExist.rows.length === 0) {
       return res.sendStatus(401);
     }
 
-    const idUserExist = await connection.query(`SELECT * FROM users WHERE id = $1`,
-    [idUser]);
-    if(idPostExist.rows.length===0){
-      return res.status(401).send("Usuário inexistente")
+    const idUserExist = await connection.query(
+      `SELECT * FROM users WHERE id = $1`,
+      [idUser]
+    );
+    if (idPostExist.rows.length === 0) {
+      return res.status(401).send('Usuário inexistente');
     }
 
-    await connection.query(`
+    await connection.query(
+      `
       INSERT INTO comments ("postId", "userId", txt, "createdAt") 
       VALUES ($1, $2, $3, NOW())`,
-      [id, idUser, body.comment]);
+      [id, idUser, body.comment]
+    );
 
     return res.sendStatus(201);
-  } catch (error){
+  } catch (error) {
     console.log(error);
     return res.sendStatus(500);
   }
@@ -338,11 +392,12 @@ export async function getAllComments(req, res) {
   }
 }
 
-export async function getComments(req, res){
-    const {id} = req.params;
+export async function getComments(req, res) {
+  const { id } = req.params;
 
-    try{
-      const comments = await connection.query(`
+  try {
+    const comments = await connection.query(
+      `
       SELECT users.username, users."pictureUrl", 
       comments.*, 
       posts."userId" AS "quemPostou" 
@@ -353,10 +408,11 @@ export async function getComments(req, res){
       ON comments."postId" = posts.id 
       WHERE posts.id = $1;
       `,
-      [id])
-      return res.status(200).send(comments.rows);
-    } catch(error){
-      console.log(error)
-      return res.sendStatus(500)
-    }
+      [id]
+    );
+    return res.status(200).send(comments.rows);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
 }

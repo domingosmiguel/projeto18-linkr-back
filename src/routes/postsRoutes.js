@@ -11,13 +11,14 @@ import {
   getNewPosts,
   publishComment,
   getAllComments,
-  getComments
+  getComments,
+  loadMorePosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
 import getUserInfo from '../middlewares/getUserInfo.middleware.js';
 import { postMiddleware } from '../middlewares/postMiddleware.js';
-import {commentMiddleware} from "../middlewares/commentMiddleware.js";
+import { commentMiddleware } from '../middlewares/commentMiddleware.js';
 
 const router = Router();
 
@@ -35,6 +36,8 @@ router.get(
   getTrendingHashtags,
   getTimelinePosts
 );
+
+router.get('/timeline-posts/:id', jwtValidation, loadMorePosts);
 
 router.get(
   '/hashtag/:hashtag',
@@ -56,10 +59,15 @@ router.delete('/:postId/userLike', jwtValidation, dislikePost);
 
 router.get('/new-posts/:id', jwtValidation, getNewPosts);
 
-router.post('/post-comment/:id', jwtValidation, commentMiddleware, publishComment);
+router.post(
+  '/post-comment/:id',
+  jwtValidation,
+  commentMiddleware,
+  publishComment
+);
 
-router.get('/post-comments-all/:id', jwtValidation, getAllComments)
+router.get('/post-comments-all/:id', jwtValidation, getAllComments);
 
-router.get('/post-comment/:id', jwtValidation, getComments)
+router.get('/post-comment/:id', jwtValidation, getComments);
 
 export default router;
