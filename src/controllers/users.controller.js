@@ -7,6 +7,7 @@ import {
   createUser,
   deleteSession,
   findUserEmail,
+  getMoreTlPosts,
   getTlPosts,
   getTlUser,
   getUserByInputSearch,
@@ -121,30 +122,24 @@ export const userTimeline = async (req, res) => {
     return res.sendStatus(500);
   }
 };
-// export const userTimelineMorePosts = async (req, res) => {
-//   const { id } = req.params;
-//   const { timestamp } = req.params;
-//   const hashtags = res.locals.trendingHashtags;
-//   const { user } = res.locals;
-//   const { sessionId } = res.locals;
-//   try {
-//     const {
-//       rows: [timelineUser],
-//     } = await getTlUser(id);
-//     const { rowCount, rows: timelinePosts } = await getTlPosts(id, timestamp);
-//     return res.send({
-//       user,
-//       timelineUser,
-//       timelinePosts: timelinePosts.slice(0, 10),
-//       hashtags,
-//       sessionId,
-//       hasMore: rowCount > 10,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.sendStatus(500);
-//   }
-// };
+
+export const userTimelineMorePosts = async (req, res) => {
+  const { id } = req.params;
+  const { timestamp } = req.params;
+  try {
+    const { rowCount, rows: timelinePosts } = await getMoreTlPosts(
+      id,
+      timestamp
+    );
+    return res.send({
+      timelinePosts: timelinePosts.slice(0, 10),
+      hasMore: rowCount > 10,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
 
 export async function getCountNewUserPosts(req, res) {
   const { timestamp } = req.params;

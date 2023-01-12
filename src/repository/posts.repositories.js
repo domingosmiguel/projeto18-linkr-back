@@ -7,7 +7,7 @@ export function countNewPosts(userId, timestamp) {
     JOIN users ON users.id = posts."userId"
     JOIN follows ON follows.following = users.id
     WHERE follows.follower = $1
-      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.1`,
+      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.001`,
     [userId, timestamp]
   );
 }
@@ -19,7 +19,7 @@ export function countNewHashtagPosts(hashtag, timestamp) {
     JOIN "postHashtags" ON "postHashtags"."postId" = posts.id 
     JOIN hashtags ON hashtags.id = "postHashtags"."hashtagId" 
     WHERE hashtags.name = $1 
-      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.1`,
+      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.001`,
     [hashtag, timestamp]
   );
 }

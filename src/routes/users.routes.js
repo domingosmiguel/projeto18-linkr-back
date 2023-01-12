@@ -9,6 +9,7 @@ import {
   signIn,
   userSignUp,
   userTimeline,
+  userTimelineMorePosts,
 } from '../controllers/users.controller.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -33,14 +34,9 @@ router.get(
   getTrendingHashtags,
   userTimeline
 );
+router.get('/user/:id/:timestamp', jwtValidation, userTimelineMorePosts);
 
-router.get(
-  '/user/:id/:timestamp',
-  jwtValidation,
-  getUserInfo,
-  getTrendingHashtags,
-  getCountNewUserPosts
-);
+router.get('/user/:id/:timestamp/new', jwtValidation, getCountNewUserPosts);
 
 router.get('/follows/:id', jwtValidation, seeIfFollow);
 
