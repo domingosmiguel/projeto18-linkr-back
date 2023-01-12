@@ -1,6 +1,6 @@
-import connection from '../database.js';
-import urlMetadata from 'url-metadata';
 import urlExist from 'url-exist';
+import urlMetadata from 'url-metadata';
+import connection from '../database.js';
 import {
   checkForMoreHashtagPosts,
   checkForMorePosts,
@@ -14,11 +14,11 @@ import {
 
 import {
   dislike,
+  getFollowing,
   likesCount,
   newLike,
   userLiked,
   usersLikes,
-  getFollowing,
 } from '../repository/users.repositories.js';
 
 export async function postTimelinePosts(req, res) {
@@ -100,12 +100,12 @@ export async function getTimelinePosts(req, res) {
     if (following.length > 0) {
       const { rows } = await timeline(following);
       posts = rows;
-      if (posts) {
+      if (posts.length > 0) {
         const count = await checkForMorePosts(
-          posts[posts.length - 1].createdAt,
+          posts.at(-1).createdAt,
           following
         );
-        if (count.rowCount) hasMore = true;
+        if (count.rowCount > 0) hasMore = true;
       }
     }
 
@@ -138,10 +138,7 @@ export async function loadMorePosts(req, res) {
       const { rows } = await loadPosts(following, timestamp);
       posts = rows;
     }
-    const count = await checkForMorePosts(
-      posts[posts.length - 1].createdAt,
-      following
-    );
+    const count = await checkForMorePosts(posts.at(-1).createdAt, following);
 
     let hasMore = false;
     if (count.rowCount) hasMore = true;
@@ -162,7 +159,7 @@ export async function getHashtagPosts(req, res) {
     if (posts.length) {
       const count = await checkForMoreHashtagPosts(
         hashtag,
-        posts[posts.length - 1].createdAt
+        posts.at(-1).createdAt
       );
       if (count.rowCount) hasMore = true;
     }
@@ -187,7 +184,7 @@ export async function loadMoreHashtagPosts(req, res) {
     const { rows: posts } = await loadHashtagPosts(hashtag, timestamp);
     const count = await checkForMoreHashtagPosts(
       hashtag,
-      posts[posts.length - 1].createdAt
+      posts.at(-1).createdAt
     );
 
     let hasMore = false;
@@ -361,9 +358,13 @@ export async function getNewPosts(req, res) {
   const { timestamp } = req.params;
   const { userId } = res.locals;
   try {
-    const number = await countNewPosts(timestamp, userId);
-    return res.send({ number: number.rows[0].number - 1 });
+    const {
+      rows: [{ count }],
+    } = await countNewPosts(userId, timestamp);
+
+    return res.send({ number: parseFloat(count) });
   } catch (error) {
+    console.log(error);
     return res.sendStatus(500);
   }
 }
@@ -371,8 +372,11 @@ export async function getNewPosts(req, res) {
 export async function getNewHashtagPosts(req, res) {
   const { hashtag, timestamp } = req.params;
   try {
-    const number = await countNewHashtagPosts(hashtag, timestamp);
-    return res.send({ number: number.rows[0].number - 1 });
+    const {
+      rows: [{ count }],
+    } = await countNewHashtagPosts(hashtag, timestamp);
+
+    return res.send({ number: parseFloat(count) });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
