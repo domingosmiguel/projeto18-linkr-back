@@ -163,19 +163,3 @@ export const getFollowing = (userId) => {
     [userId]
   );
 };
-export const timeline = (usersIds) => {
-  return connection.query(
-    `SELECT users.username, 
-      users."pictureUrl", 
-      posts.*, 
-      metadatas.image, 
-      metadatas.title, 
-      metadatas.description 
-    FROM posts
-    JOIN users ON posts."userId" = users.id
-    JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE users.id = ANY($1)
-    ORDER BY posts.id DESC LIMIT 10;`,
-    [usersIds]
-  );
-};

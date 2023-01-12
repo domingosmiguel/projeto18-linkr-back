@@ -9,6 +9,24 @@ export function countNewPosts(id, userId) {
     [id, userId]
   );
 }
+
+export const timeline = (usersIds) => {
+  return connection.query(
+    `SELECT users.username, 
+      users."pictureUrl", 
+      posts.*, 
+      metadatas.image, 
+      metadatas.title, 
+      metadatas.description 
+    FROM posts
+    JOIN users ON posts."userId" = users.id
+    JOIN metadatas ON posts.id = metadatas."postId"
+    WHERE users.id = ANY($1)
+    ORDER BY posts."createdAt" DESC LIMIT 10;`,
+    [usersIds]
+  );
+};
+
 export function loadPosts(usersIds, id) {
   return connection.query(
     `SELECT users.username, users."pictureUrl", 
@@ -18,16 +36,18 @@ export function loadPosts(usersIds, id) {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE users.id = ANY($1) AND posts.id < $2
-    ORDER BY posts.id DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 10;`,
     [usersIds, id]
   );
 }
+
 export function checkForMorePosts(id, usersIds) {
   return connection.query(
     `SELECT * FROM posts WHERE id < $1 AND posts."userId" = ANY($2);`,
     [id, usersIds]
   );
 }
+
 export async function getHashtagPostsQuery(hashtag) {
   return connection.query(
     `SELECT users.username, users."pictureUrl",
@@ -39,7 +59,7 @@ export async function getHashtagPostsQuery(hashtag) {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE hashtags.name = $1
-    ORDER BY posts.id DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 10;`,
     [hashtag]
   );
 }
@@ -65,7 +85,7 @@ export function loadHashtagPosts(hashtag, id) {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE hashtags.name = $1 AND posts.id < $2
-    ORDER BY posts.id DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 10;`,
     [hashtag, id]
   );
 }

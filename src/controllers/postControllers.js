@@ -8,6 +8,7 @@ import {
   getHashtagPostsQuery,
   loadHashtagPosts,
   loadPosts,
+  timeline,
 } from '../repository/posts.repositories.js';
 
 import {
@@ -17,7 +18,6 @@ import {
   userLiked,
   usersLikes,
   getFollowing,
-  timeline,
 } from '../repository/users.repositories.js';
 
 export async function postTimelinePosts(req, res) {
