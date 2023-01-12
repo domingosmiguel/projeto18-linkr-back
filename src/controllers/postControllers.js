@@ -435,6 +435,7 @@ export async function getAllComments(req, res) {
 
 export async function getComments(req, res) {
   const { id } = req.params;
+  const userId = res.locals.userId;
 
   try {
     const comments = await connection.query(
@@ -451,7 +452,34 @@ export async function getComments(req, res) {
       `,
       [id]
     );
-    return res.status(200).send(comments.rows);
+
+    const usersFollowging = await connection.query(`
+      SELECT follows.following 
+      FROM follows 
+      WHERE follows.follower = $1;
+      `,
+      [userId]); 
+      
+      const userIsFollowing = usersFollowging.rows.map((u)=> u.following);
+      const commentsUpadte = [] 
+      for(let i=0; i<comments.rows.length; i++){
+        commentsUpadte.push(
+          {
+          createdAt:  comments.rows[i].createdAt,
+          id:  comments.rows[i].id,
+          userId:   comments.rows[i].userId,
+          username: comments.rows[i].username,
+          pictureUrl:  comments.rows[i].pictureUrl,
+          txt :  comments.rows[i].txt ,
+          postId:   comments.rows[i].postId,
+          quemPostou:  comments.rows[i].quemPostou,
+          following: userIsFollowing.includes(comments.rows[i].userId)? true:false
+          }
+        )
+      }
+
+    console.log(usersFollowging.rows)
+    return res.status(200).send(commentsUpadte);
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
