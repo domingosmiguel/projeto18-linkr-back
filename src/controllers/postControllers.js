@@ -4,6 +4,7 @@ import connection from '../database.js';
 import {
   countNewHashtagPosts,
   countNewPosts,
+  creatRepost,
   getHashtagPostsQuery,
   loadHashtagPosts,
   loadPosts,
@@ -210,13 +211,14 @@ export async function deletePost(req, res) {
       ]);
     }
 
-    const existComments = await connection.query(`SELECT * FROM comments WHERE "postId" = $1`,
-    [id]);
-    if(existComments.rows.length > 0){
-      await connection.query(`DELETE FROM comments WHERE "postId" = $1`,
-      [id]);
+    const existComments = await connection.query(
+      `SELECT * FROM comments WHERE "postId" = $1`,
+      [id]
+    );
+    if (existComments.rows.length > 0) {
+      await connection.query(`DELETE FROM comments WHERE "postId" = $1`, [id]);
     }
-    
+
     await connection.query(`DELETE FROM posts WHERE id = $1`, [id]);
 
     return res.sendStatus(200);
@@ -478,5 +480,16 @@ export async function getComments(req, res) {
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
+  }
+}
+
+export async function postRepost(req, res) {
+  const { id } = req.params;
+  const { userId } = res.locals;
+  try {
+    await creatRepost(id, userId);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
   }
 }

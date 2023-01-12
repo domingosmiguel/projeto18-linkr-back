@@ -15,6 +15,7 @@ import {
   loadMorePosts,
   loadMoreHashtagPosts,
   getNewHashtagPosts,
+  postRepost,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -79,5 +80,7 @@ router.post(
 router.get('/post-comments-all/:id', jwtValidation, getAllComments);
 
 router.get('/post-comment/:id', jwtValidation, getComments);
+
+router.post('/repost/:id', jwtValidation, postRepost);
 
 export default router;

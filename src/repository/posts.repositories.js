@@ -100,3 +100,10 @@ export function loadHashtagPosts(hashtag, timestamp) {
     [hashtag, timestamp]
   );
 }
+
+export function creatRepost(id, userId) {
+  return connection.query(
+    `INSERT INTO reposts ("postId", "userId") VALUES ($1, $2);`,
+    [id, userId]
+  );
+}
