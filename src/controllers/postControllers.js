@@ -102,7 +102,7 @@ export async function getTimelinePosts(req, res) {
       posts = rows;
       if (posts) {
         const count = await checkForMorePosts(
-          posts[posts.length - 1].id,
+          posts[posts.length - 1].createdAt,
           following
         );
         if (count.rowCount) hasMore = true;
@@ -126,7 +126,7 @@ export async function getTimelinePosts(req, res) {
 }
 
 export async function loadMorePosts(req, res) {
-  const { id } = req.params;
+  const { timestamp } = req.params;
   const { userId } = res.locals;
 
   try {
@@ -139,7 +139,7 @@ export async function loadMorePosts(req, res) {
       posts = rows;
     }
     const count = await checkForMorePosts(
-      posts[posts.length - 1].id,
+      posts[posts.length - 1].createdAt,
       following
     );
 
@@ -160,7 +160,7 @@ export async function getHashtagPosts(req, res) {
     const { rows: posts } = await getHashtagPostsQuery(hashtag);
     const count = await checkForMoreHashtagPosts(
       hashtag,
-      posts[posts.length - 1].id
+      posts[posts.length - 1].createdAt
     );
     let hasMore = false;
     if (count.rowCount) hasMore = true;
@@ -181,12 +181,12 @@ export async function getHashtagPosts(req, res) {
 }
 
 export async function loadMoreHashtagPosts(req, res) {
-  const { hashtag, id } = req.params;
+  const { hashtag, timestamp } = req.params;
   try {
     const { rows: posts } = await loadHashtagPosts(hashtag, id);
     const count = await checkForMoreHashtagPosts(
       hashtag,
-      posts[posts.length - 1].id
+      posts[posts.length - 1].createdAt
     );
 
     let hasMore = false;
@@ -357,10 +357,10 @@ export const dislikePost = async (req, res) => {
 };
 
 export async function getNewPosts(req, res) {
-  const { id } = req.params;
+  const { timestamp } = req.params;
   const { userId } = res.locals;
   try {
-    const number = await countNewPosts(id, userId);
+    const number = await countNewPosts(timestamp, userId);
     return res.send(number.rows[0].number);
   } catch (error) {
     return res.sendStatus(500);
@@ -368,9 +368,9 @@ export async function getNewPosts(req, res) {
 }
 
 export async function getNewHashtagPosts(req, res) {
-  const { hashtag, id } = req.params;
+  const { hashtag, timestamp } = req.params;
   try {
-    const number = await countNewHashtagPosts(hashtag, id);
+    const number = await countNewHashtagPosts(hashtag, timestamp);
     return res.send(number.rows[0].number);
   } catch (error) {
     console.log(error);

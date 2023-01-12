@@ -39,7 +39,7 @@ router.get(
   getTimelinePosts
 );
 
-router.get('/timeline-posts/:id', jwtValidation, loadMorePosts);
+router.get('/timeline-posts/:timestamp', jwtValidation, loadMorePosts);
 
 router.get(
   '/hashtag/:hashtag',
@@ -49,7 +49,7 @@ router.get(
   getHashtagPosts
 );
 
-router.get('/hashtag/:hashtag/:id', jwtValidation, loadMoreHashtagPosts);
+router.get('/hashtag/:hashtag/:timestamp', jwtValidation, loadMoreHashtagPosts);
 
 router.delete('/user-posts/:id', jwtValidation, deletePost);
 
@@ -64,13 +64,13 @@ router.delete('/:postId/userLike', jwtValidation, dislikePost);
 router.get('/new-posts/:id', jwtValidation, getNewPosts);
 
 router.get(
-  '/new-hashtag-posts/:hashtag/:id',
+  '/new-hashtag-posts/:hashtag/:timestamp',
   jwtValidation,
   getNewHashtagPosts
 );
 
 router.post(
-  '/post-comment/:id',
+  '/post-comment/:timestamp',
   jwtValidation,
   commentMiddleware,
   publishComment
