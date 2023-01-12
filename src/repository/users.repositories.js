@@ -71,7 +71,7 @@ export const getTlUser = (id) => {
 
 export const getTlPosts = (id) => {
   return connection.query(
-    `SELECT posts.id, posts."userId", posts.txt, posts.link, posts."createdAt"
+    `SELECT posts.id, posts."userId", posts.txt, posts.link, posts."createdAt",
       metadatas.image, metadatas.title, metadatas.description 
     FROM posts
     JOIN users ON users.id = posts."userId"
