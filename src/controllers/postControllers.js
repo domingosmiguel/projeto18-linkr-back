@@ -2,8 +2,11 @@ import connection from '../database.js';
 import urlMetadata from 'url-metadata';
 import urlExist from 'url-exist';
 import {
+  checkForMoreHashtagPosts,
   checkForMorePosts,
   countNewPosts,
+  getHashtagPostsQuery,
+  loadHashtagPosts,
   loadPosts,
 } from '../repository/posts.repositories.js';
 
@@ -132,7 +135,7 @@ export async function loadMorePosts(req, res) {
 
     let posts = [];
     if (following.length > 0) {
-      const { rows } = await loadPosts(following);
+      const { rows } = await loadPosts(following, id);
       posts = rows;
     }
     const count = await checkForMorePosts(
@@ -154,20 +157,49 @@ export async function getHashtagPosts(req, res) {
   const { hashtag } = req.params;
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
-    const posts = await connection.query(
-      `
-    SELECT users.username, users."pictureUrl", posts.txt, posts.link, posts."userId", posts.id, metadatas.image, metadatas.title, metadatas.description FROM posts 
-    JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
-    JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
-    JOIN users ON posts."userId" = users.id
-    JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE hashtags.name = $1
-    ORDER BY posts.id DESC LIMIT 20;
-    `,
-      [hashtag]
+    const { rows: posts } = await getHashtagPostsQuery(hashtag);
+    console.log(posts);
+    const count = await checkForMoreHashtagPosts(
+      hashtag,
+      posts[posts.length - 1].id
     );
+    console.log(count);
+
+    let hasMore = false;
+    if (count.rowCount) hasMore = true;
+
     return res
-      .send({ posts: posts.rows, user, sessionId, hashtags: trendingHashtags })
+      .send({
+        posts,
+        user,
+        sessionId,
+        hashtags: trendingHashtags,
+        hasMore,
+      })
+      .status(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
+
+export async function loadMoreHashtagPosts(req, res) {
+  const { hashtag, id } = req.params;
+  try {
+    const { rows: posts } = await loadHashtagPosts(hashtag, id);
+    const count = await checkForMoreHashtagPosts(
+      hashtag,
+      posts[posts.length - 1].id
+    );
+
+    let hasMore = false;
+    if (count.rowCount) hasMore = true;
+
+    return res
+      .send({
+        posts,
+        hasMore,
+      })
       .status(200);
   } catch (error) {
     console.log(error);

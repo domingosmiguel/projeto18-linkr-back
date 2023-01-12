@@ -13,6 +13,7 @@ import {
   getAllComments,
   getComments,
   loadMorePosts,
+  loadMoreHashtagPosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -46,6 +47,8 @@ router.get(
   getTrendingHashtags,
   getHashtagPosts
 );
+
+router.get('/hashtag/:hashtag/:id', jwtValidation, loadMoreHashtagPosts);
 
 router.delete('/user-posts/:id', jwtValidation, deletePost);
 
