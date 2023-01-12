@@ -362,8 +362,7 @@ export async function getNewPosts(req, res) {
   const { userId } = res.locals;
   try {
     const number = await countNewPosts(timestamp, userId);
-    console.log(number.rows[0]);
-    return res.send(number.rows[0].number);
+    return res.send({ number: number.rows[0].number - 1 });
   } catch (error) {
     return res.sendStatus(500);
   }

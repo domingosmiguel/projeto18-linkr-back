@@ -61,7 +61,7 @@ router.post('/:postId/userLike', jwtValidation, likePost);
 
 router.delete('/:postId/userLike', jwtValidation, dislikePost);
 
-router.get('/new-posts/:id', jwtValidation, getNewPosts);
+router.get('/new-posts/:timestamp', jwtValidation, getNewPosts);
 
 router.get(
   '/new-hashtag-posts/:hashtag/:timestamp',
