@@ -435,6 +435,7 @@ export async function getAllComments(req, res) {
 
 export async function getComments(req, res) {
   const { id } = req.params;
+  const userId = res.locals.userId;
 
   try {
     const comments = await connection.query(
