@@ -52,13 +52,6 @@ export function loadPosts(usersIds, timestamp) {
   );
 }
 
-function checkForMorePosts(timestamp, usersIds) {
-  return connection.query(
-    `SELECT id FROM posts WHERE "createdAt" < $1 AND posts."userId" = ANY($2);`,
-    [timestamp, usersIds]
-  );
-}
-
 export function getHashtagPostsQuery(hashtag) {
   return connection.query(
     `SELECT users.username, users."pictureUrl",
@@ -72,16 +65,6 @@ export function getHashtagPostsQuery(hashtag) {
     WHERE hashtags.name = $1
     ORDER BY posts."createdAt" DESC LIMIT 11;`,
     [hashtag]
-  );
-}
-
-function checkForMoreHashtagPosts(hashtag, timestamp) {
-  return connection.query(
-    `SELECT posts.id FROM posts
-    JOIN "postHashtags" ON posts.id = "postHashtags"."postId"
-    JOIN hashtags ON hashtags.id = "postHashtags"."hashtagId"
-    WHERE hashtags.name = $1 AND posts."createdAt" < $2;`,
-    [hashtag, timestamp]
   );
 }
 
