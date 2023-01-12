@@ -2,8 +2,6 @@ import urlExist from 'url-exist';
 import urlMetadata from 'url-metadata';
 import connection from '../database.js';
 import {
-  checkForMoreHashtagPosts,
-  checkForMorePosts,
   countNewHashtagPosts,
   countNewPosts,
   getHashtagPostsQuery,
@@ -95,18 +93,14 @@ export async function getTimelinePosts(req, res) {
   try {
     const { rows: following } = await getFollowing(userId);
     following.forEach((user, i) => (following[i] = user.following));
+
     let hasMore = false;
     let posts = [];
-    if (following.length > 0) {
-      const { rows } = await timeline(following);
-      posts = rows;
-      if (posts.length > 0) {
-        const count = await checkForMorePosts(
-          posts.at(-1).createdAt,
-          following
-        );
-        if (count.rowCount > 0) hasMore = true;
-      }
+    if (following.length) {
+      const { rowCount, rows } = await timeline(following);
+      posts = rows.slice(0, 10);
+
+      if (rowCount > 10) hasMore = true;
     }
 
     return res
@@ -133,15 +127,13 @@ export async function loadMorePosts(req, res) {
     const { rows: following } = await getFollowing(userId);
     following.forEach((user, i) => (following[i] = user.following));
 
-    let posts = [];
-    if (following.length > 0) {
-      const { rows } = await loadPosts(following, timestamp);
-      posts = rows;
-    }
-    const count = await checkForMorePosts(posts.at(-1).createdAt, following);
-
     let hasMore = false;
-    if (count.rowCount) hasMore = true;
+    let posts = [];
+    if (following.length) {
+      const { rowCount, rows } = await loadPosts(following, timestamp);
+      posts = rows.slice(0, 10);
+      if (rowCount > 10) hasMore = true;
+    }
 
     return res.send({ following, posts, hasMore }).status(200);
   } catch (error) {
@@ -154,22 +146,15 @@ export async function getHashtagPosts(req, res) {
   const { hashtag } = req.params;
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
-    const { rows: posts } = await getHashtagPostsQuery(hashtag);
-    let hasMore = false;
-    if (posts.length) {
-      const count = await checkForMoreHashtagPosts(
-        hashtag,
-        posts.at(-1).createdAt
-      );
-      if (count.rowCount) hasMore = true;
-    }
+    const { rowCount, rows: posts } = await getHashtagPostsQuery(hashtag);
+
     return res
       .send({
-        posts,
+        posts: posts.slice(0, 10),
         user,
         sessionId,
         hashtags: trendingHashtags,
-        hasMore,
+        hasMore: rowCount > 10,
       })
       .status(200);
   } catch (error) {
@@ -181,19 +166,15 @@ export async function getHashtagPosts(req, res) {
 export async function loadMoreHashtagPosts(req, res) {
   const { hashtag, timestamp } = req.params;
   try {
-    const { rows: posts } = await loadHashtagPosts(hashtag, timestamp);
-    const count = await checkForMoreHashtagPosts(
+    const { rowCount, rows: posts } = await loadHashtagPosts(
       hashtag,
-      posts.at(-1).createdAt
+      timestamp
     );
-
-    let hasMore = false;
-    if (count.rowCount) hasMore = true;
 
     return res
       .send({
-        posts,
-        hasMore,
+        posts: posts.slice(0, 10),
+        hasMore: rowCount > 10,
       })
       .status(200);
   } catch (error) {
@@ -316,7 +297,7 @@ export const postLikes = async (req, res) => {
     return res
       .send({
         count: parseInt(count),
-        users: users || [],
+        users,
         liked: parseInt(liked) ? true : false,
       })
       .status(200);
@@ -387,7 +368,7 @@ export async function publishComment(req, res) {
   const body = req.body;
   const { id } = req.params;
   const idUser = res.locals.userId;
-  console.log(id)
+  console.log(id);
 
   try {
     const idPostExist = await connection.query(
@@ -458,32 +439,34 @@ export async function getComments(req, res) {
       [id]
     );
 
-    const usersFollowging = await connection.query(`
+    const usersFollowging = await connection.query(
+      `
       SELECT follows.following 
       FROM follows 
       WHERE follows.follower = $1;
       `,
-      [userId]); 
-      
-      const userIsFollowing = usersFollowging.rows.map((u)=> u.following);
-      const commentsUpadte = [] 
-      for(let i=0; i<comments.rows.length; i++){
-        commentsUpadte.push(
-          {
-          createdAt:  comments.rows[i].createdAt,
-          id:  comments.rows[i].id,
-          userId:   comments.rows[i].userId,
-          username: comments.rows[i].username,
-          pictureUrl:  comments.rows[i].pictureUrl,
-          txt :  comments.rows[i].txt ,
-          postId:   comments.rows[i].postId,
-          quemPostou:  comments.rows[i].quemPostou,
-          following: userIsFollowing.includes(comments.rows[i].userId)? true:false
-          }
-        )
-      }
+      [userId]
+    );
 
-    console.log(usersFollowging.rows)
+    const userIsFollowing = usersFollowging.rows.map((u) => u.following);
+    const commentsUpadte = [];
+    for (let i = 0; i < comments.rows.length; i++) {
+      commentsUpadte.push({
+        createdAt: comments.rows[i].createdAt,
+        id: comments.rows[i].id,
+        userId: comments.rows[i].userId,
+        username: comments.rows[i].username,
+        pictureUrl: comments.rows[i].pictureUrl,
+        txt: comments.rows[i].txt,
+        postId: comments.rows[i].postId,
+        quemPostou: comments.rows[i].quemPostou,
+        following: userIsFollowing.includes(comments.rows[i].userId)
+          ? true
+          : false,
+      });
+    }
+
+    console.log(usersFollowging.rows);
     return res.status(200).send(commentsUpadte);
   } catch (error) {
     console.log(error);
