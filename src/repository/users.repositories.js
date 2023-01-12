@@ -101,8 +101,8 @@ export function countNewUserPosts(id, timestamp) {
     FROM posts
     JOIN users ON users.id = posts."userId"
     WHERE users.id = $1
-      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.1`,
-    [userId, timestamp]
+      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.001`,
+    [id, timestamp]
   );
 }
 
