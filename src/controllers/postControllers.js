@@ -343,11 +343,15 @@ export async function getComments(req, res){
 
     try{
       const comments = await connection.query(`
-      SELECT users.username, users."pictureUrl", comments.* 
+      SELECT users.username, users."pictureUrl", 
+      comments.*, 
+      posts."userId" AS "quemPostou" 
       FROM users 
       LEFT JOIN comments 
       ON users.id = comments."userId" 
-      WHERE comments."postId" = $1;
+      LEFT JOIN posts 
+      ON comments."postId" = posts.id 
+      WHERE posts.id = $1;
       `,
       [id])
       return res.status(200).send(comments.rows);
