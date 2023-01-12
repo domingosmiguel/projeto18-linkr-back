@@ -3,12 +3,12 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import {
   checkFollow,
+  countNewUserPosts,
   createUser,
   deleteSession,
   findUserEmail,
   getTlPosts,
   getTlUser,
-  getUserById,
   getUserByInputSearch,
   getUserURFollowing,
   insertSession,
@@ -101,28 +101,66 @@ export const searchUsers = async (req, res) => {
 export const userTimeline = async (req, res) => {
   const { id } = req.params;
   const hashtags = res.locals.trendingHashtags;
-  const { userId } = res.locals;
+  const { user } = res.locals;
   const { sessionId } = res.locals;
   try {
     const {
-      rows: [user],
-    } = await getUserById(userId);
-    const {
       rows: [timelineUser],
     } = await getTlUser(id);
-    const { rows: timelinePosts } = await getTlPosts(id);
+    const { rowCount, rows: timelinePosts } = await getTlPosts(id);
     return res.send({
       user,
       timelineUser,
-      timelinePosts: timelinePosts || [],
+      timelinePosts: timelinePosts.slice(0, 10),
       hashtags,
       sessionId,
+      hasMore: rowCount > 10,
     });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
   }
 };
+// export const userTimelineMorePosts = async (req, res) => {
+//   const { id } = req.params;
+//   const { timestamp } = req.params;
+//   const hashtags = res.locals.trendingHashtags;
+//   const { user } = res.locals;
+//   const { sessionId } = res.locals;
+//   try {
+//     const {
+//       rows: [timelineUser],
+//     } = await getTlUser(id);
+//     const { rowCount, rows: timelinePosts } = await getTlPosts(id, timestamp);
+//     return res.send({
+//       user,
+//       timelineUser,
+//       timelinePosts: timelinePosts.slice(0, 10),
+//       hashtags,
+//       sessionId,
+//       hasMore: rowCount > 10,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.sendStatus(500);
+//   }
+// };
+
+export async function getCountNewUserPosts(req, res) {
+  const { timestamp } = req.params;
+  const { id } = req.params;
+
+  try {
+    const {
+      rows: [{ count }],
+    } = await countNewUserPosts(id, timestamp);
+
+    return res.send({ number: parseFloat(count) });
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+}
 
 export const seeIfFollow = async (req, res) => {
   const { userId } = res.locals;

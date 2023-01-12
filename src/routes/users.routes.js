@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   deleteFollow,
+  getCountNewUserPosts,
   logOut,
   postNewFollow,
   searchUsers,
@@ -11,6 +12,7 @@ import {
 } from '../controllers/users.controller.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
+import getUserInfo from '../middlewares/getUserInfo.middleware.js';
 import signInMiddleware from '../middlewares/signIn.middleware.js';
 import validateUserSignUpSchema from '../middlewares/validateUserSignUpModel.middleware.js';
 
@@ -24,7 +26,21 @@ router.post('/logout', jwtValidation, logOut);
 
 router.get('/usernames', jwtValidation, searchUsers);
 
-router.get('/user/:id', jwtValidation, getTrendingHashtags, userTimeline);
+router.get(
+  '/user/:id',
+  jwtValidation,
+  getUserInfo,
+  getTrendingHashtags,
+  userTimeline
+);
+
+router.get(
+  '/user/:id/:timestamp',
+  jwtValidation,
+  getUserInfo,
+  getTrendingHashtags,
+  getCountNewUserPosts
+);
 
 router.get('/follows/:id', jwtValidation, seeIfFollow);
 

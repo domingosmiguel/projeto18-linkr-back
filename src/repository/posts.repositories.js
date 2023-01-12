@@ -33,7 +33,7 @@ export const timeline = (usersIds) => {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE users.id = ANY($1)
-    ORDER BY posts."createdAt" DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 11`,
     [usersIds]
   );
 };
@@ -47,19 +47,19 @@ export function loadPosts(usersIds, timestamp) {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE users.id = ANY($1) AND posts."createdAt" < $2
-    ORDER BY posts."createdAt" DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 11;`,
     [usersIds, timestamp]
   );
 }
 
-export function checkForMorePosts(timestamp, usersIds) {
+function checkForMorePosts(timestamp, usersIds) {
   return connection.query(
-    `SELECT * FROM posts WHERE "createdAt" < $1 AND posts."userId" = ANY($2);`,
+    `SELECT id FROM posts WHERE "createdAt" < $1 AND posts."userId" = ANY($2);`,
     [timestamp, usersIds]
   );
 }
 
-export async function getHashtagPostsQuery(hashtag) {
+export function getHashtagPostsQuery(hashtag) {
   return connection.query(
     `SELECT users.username, users."pictureUrl",
       posts.*,
@@ -70,14 +70,14 @@ export async function getHashtagPostsQuery(hashtag) {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE hashtags.name = $1
-    ORDER BY posts."createdAt" DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 11;`,
     [hashtag]
   );
 }
 
-export async function checkForMoreHashtagPosts(hashtag, timestamp) {
+function checkForMoreHashtagPosts(hashtag, timestamp) {
   return connection.query(
-    `SELECT * FROM posts
+    `SELECT posts.id FROM posts
     JOIN "postHashtags" ON posts.id = "postHashtags"."postId"
     JOIN hashtags ON hashtags.id = "postHashtags"."hashtagId"
     WHERE hashtags.name = $1 AND posts."createdAt" < $2;`,
@@ -96,7 +96,7 @@ export function loadHashtagPosts(hashtag, timestamp) {
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE hashtags.name = $1 AND posts."createdAt" < $2
-    ORDER BY posts."createdAt" DESC LIMIT 10;`,
+    ORDER BY posts."createdAt" DESC LIMIT 11;`,
     [hashtag, timestamp]
   );
 }

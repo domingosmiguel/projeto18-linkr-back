@@ -71,16 +71,40 @@ export const getTlUser = (id) => {
 
 export const getTlPosts = (id) => {
   return connection.query(
-    `SELECT posts.id, posts."userId", posts.txt, posts.link, posts."createdAt",
+    `SELECT posts.*,
       metadatas.image, metadatas.title, metadatas.description 
     FROM posts
     JOIN users ON users.id = posts."userId"
     JOIN metadatas ON posts.id = metadatas."postId"
     WHERE users.id = ($1)
-    ORDER BY posts."createdAt" DESC`,
+    ORDER BY posts."createdAt" DESC LIMIT 11`,
     [id]
   );
 };
+
+export const getMoreTlPosts = (id, timestamp) => {
+  return connection.query(
+    `SELECT posts.*,
+      metadatas.image, metadatas.title, metadatas.description 
+    FROM posts
+    JOIN users ON users.id = posts."userId"
+    JOIN metadatas ON posts.id = metadatas."postId"
+    WHERE users.id = ($1) AND posts."createdAt" < $2
+    ORDER BY posts."createdAt" DESC LIMIT 11`,
+    [id, timestamp]
+  );
+};
+
+export function countNewUserPosts(id, timestamp) {
+  return connection.query(
+    `SELECT COALESCE(COUNT(posts.id), 0) as count
+    FROM posts
+    JOIN users ON users.id = posts."userId"
+    WHERE users.id = $1
+      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.1`,
+    [userId, timestamp]
+  );
+}
 
 export const likesCount = (postId) => {
   return connection.query(
