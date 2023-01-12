@@ -383,6 +383,7 @@ export async function publishComment(req, res) {
   const body = req.body;
   const { id } = req.params;
   const idUser = res.locals.userId;
+  console.log(id)
 
   try {
     const idPostExist = await connection.query(
@@ -397,7 +398,7 @@ export async function publishComment(req, res) {
       `SELECT * FROM users WHERE id = $1`,
       [idUser]
     );
-    if (idPostExist.rows.length === 0) {
+    if (idUserExist.rows.length === 0) {
       return res.status(401).send('Usuário inexistente');
     }
 
