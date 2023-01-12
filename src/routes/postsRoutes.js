@@ -70,7 +70,7 @@ router.get(
 );
 
 router.post(
-  '/post-comment/:timestamp',
+  '/post-comment/:id',
   jwtValidation,
   commentMiddleware,
   publishComment
