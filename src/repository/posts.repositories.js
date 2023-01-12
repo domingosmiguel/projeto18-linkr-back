@@ -10,6 +10,16 @@ export function countNewPosts(id, userId) {
   );
 }
 
+export function countNewHashtagPosts(hashtag, id) {
+  return connection.query(
+    `SELECT COUNT(*) AS number FROM posts
+    JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
+    JOIN hashtags ON hashtags.id = "postHashtags"."hashtagId"
+    WHERE hashtags.name = $1 AND posts.id > $2;`,
+    [hashtag, id]
+  );
+}
+
 export const timeline = (usersIds) => {
   return connection.query(
     `SELECT users.username, 
@@ -21,6 +31,7 @@ export const timeline = (usersIds) => {
     FROM posts
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
+    JOIN reposts ON reposts."postId" = posts.id
     WHERE users.id = ANY($1)
     ORDER BY posts."createdAt" DESC LIMIT 10;`,
     [usersIds]

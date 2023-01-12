@@ -4,6 +4,7 @@ import urlExist from 'url-exist';
 import {
   checkForMoreHashtagPosts,
   checkForMorePosts,
+  countNewHashtagPosts,
   countNewPosts,
   getHashtagPostsQuery,
   loadHashtagPosts,
@@ -158,13 +159,10 @@ export async function getHashtagPosts(req, res) {
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
     const { rows: posts } = await getHashtagPostsQuery(hashtag);
-    console.log(posts);
     const count = await checkForMoreHashtagPosts(
       hashtag,
       posts[posts.length - 1].id
     );
-    console.log(count);
-
     let hasMore = false;
     if (count.rowCount) hasMore = true;
 
@@ -366,6 +364,17 @@ export async function getNewPosts(req, res) {
     const number = await countNewPosts(id, userId);
     return res.send(number.rows[0].number);
   } catch (error) {
+    return res.sendStatus(500);
+  }
+}
+
+export async function getNewHashtagPosts(req, res) {
+  const { hashtag, id } = req.params;
+  try {
+    const number = await countNewHashtagPosts(hashtag, id);
+    return res.send(number.rows[0].number);
+  } catch (error) {
+    console.log(error);
     return res.sendStatus(500);
   }
 }

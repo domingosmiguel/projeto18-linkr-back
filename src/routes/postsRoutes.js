@@ -14,6 +14,7 @@ import {
   getComments,
   loadMorePosts,
   loadMoreHashtagPosts,
+  getNewHashtagPosts,
 } from '../controllers/postControllers.js';
 import jwtValidation from '../middlewares/auth.middleware.js';
 import getTrendingHashtags from '../middlewares/getTrendingHashtags.middleware.js';
@@ -61,6 +62,12 @@ router.post('/:postId/userLike', jwtValidation, likePost);
 router.delete('/:postId/userLike', jwtValidation, dislikePost);
 
 router.get('/new-posts/:id', jwtValidation, getNewPosts);
+
+router.get(
+  '/new-hashtag-posts/:hashtag/:id',
+  jwtValidation,
+  getNewHashtagPosts
+);
 
 router.post(
   '/post-comment/:id',
