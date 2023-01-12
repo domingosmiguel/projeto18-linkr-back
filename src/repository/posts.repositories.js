@@ -22,16 +22,12 @@ export function countNewHashtagPosts(hashtag, id) {
 
 export const timeline = (usersIds) => {
   return connection.query(
-    `SELECT users.username, 
-      users."pictureUrl", 
+    `SELECT users.username, users."pictureUrl", 
       posts.*, 
-      metadatas.image, 
-      metadatas.title, 
-      metadatas.description 
+      metadatas.image, metadatas.title, metadatas.description 
     FROM posts
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
-    JOIN reposts ON reposts."postId" = posts.id
     WHERE users.id = ANY($1)
     ORDER BY posts."createdAt" DESC LIMIT 10;`,
     [usersIds]
