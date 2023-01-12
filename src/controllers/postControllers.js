@@ -158,13 +158,14 @@ export async function getHashtagPosts(req, res) {
   const { user, sessionId, trendingHashtags } = res.locals;
   try {
     const { rows: posts } = await getHashtagPostsQuery(hashtag);
-    const count = await checkForMoreHashtagPosts(
-      hashtag,
-      posts[posts.length - 1].createdAt
-    );
     let hasMore = false;
-    if (count.rowCount) hasMore = true;
-
+    if (posts.length) {
+      const count = await checkForMoreHashtagPosts(
+        hashtag,
+        posts[posts.length - 1].createdAt
+      );
+      if (count.rowCount) hasMore = true;
+    }
     return res
       .send({
         posts,
@@ -361,7 +362,7 @@ export async function getNewPosts(req, res) {
   const { userId } = res.locals;
   try {
     const number = await countNewPosts(timestamp, userId);
-    return res.send(number.rows[0].number);
+    return res.send({ number: number.rows[0].number });
   } catch (error) {
     return res.sendStatus(500);
   }
@@ -371,7 +372,7 @@ export async function getNewHashtagPosts(req, res) {
   const { hashtag, timestamp } = req.params;
   try {
     const number = await countNewHashtagPosts(hashtag, timestamp);
-    return res.send(number.rows[0].number);
+    return res.send({ number: number.rows[0].number - 1 });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);

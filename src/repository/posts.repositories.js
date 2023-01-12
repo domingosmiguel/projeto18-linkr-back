@@ -58,7 +58,7 @@ export function checkForMorePosts(timestamp, usersIds) {
 export async function getHashtagPostsQuery(hashtag) {
   return connection.query(
     `SELECT users.username, users."pictureUrl",
-      posts.txt, posts.link, posts."userId", posts.id, posts."createdAt",
+      posts.*,
       metadatas.image, metadatas.title, metadatas.description
     FROM posts 
     JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
@@ -84,7 +84,7 @@ export async function checkForMoreHashtagPosts(hashtag, timestamp) {
 export function loadHashtagPosts(hashtag, timestamp) {
   return connection.query(
     `SELECT users.username, users."pictureUrl",
-      posts.txt, posts.link, posts."userId", posts.id, posts."createdAt",
+      posts.*,
       metadatas.image, metadatas.title, metadatas.description
     FROM posts 
     JOIN "postHashtags" ON "postHashtags"."postId" = posts.id
