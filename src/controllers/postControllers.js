@@ -232,6 +232,13 @@ export async function deletePost(req, res) {
       ]);
     }
 
+    const existComments = await connection.query(`SELECT * FROM comments WHERE "postId" = $1`,
+    [id]);
+    if(existComments.rows.length > 0){
+      await connection.query(`DELETE FROM comments WHERE "postId" = $1`,
+      [id]);
+    }
+    
     await connection.query(`DELETE FROM posts WHERE id = $1`, [id]);
 
     return res.sendStatus(200);
