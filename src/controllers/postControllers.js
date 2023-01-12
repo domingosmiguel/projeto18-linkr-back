@@ -135,7 +135,7 @@ export async function loadMorePosts(req, res) {
 
     let posts = [];
     if (following.length > 0) {
-      const { rows } = await loadPosts(following, id);
+      const { rows } = await loadPosts(following, timestamp);
       posts = rows;
     }
     const count = await checkForMorePosts(
@@ -184,7 +184,7 @@ export async function getHashtagPosts(req, res) {
 export async function loadMoreHashtagPosts(req, res) {
   const { hashtag, timestamp } = req.params;
   try {
-    const { rows: posts } = await loadHashtagPosts(hashtag, id);
+    const { rows: posts } = await loadHashtagPosts(hashtag, timestamp);
     const count = await checkForMoreHashtagPosts(
       hashtag,
       posts[posts.length - 1].createdAt
@@ -362,7 +362,8 @@ export async function getNewPosts(req, res) {
   const { userId } = res.locals;
   try {
     const number = await countNewPosts(timestamp, userId);
-    return res.send({ number: number.rows[0].number });
+    console.log(number.rows[0]);
+    return res.send(number.rows[0].number);
   } catch (error) {
     return res.sendStatus(500);
   }

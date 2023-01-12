@@ -91,7 +91,7 @@ export function loadHashtagPosts(hashtag, timestamp) {
     JOIN hashtags ON "postHashtags"."hashtagId" = hashtags.id
     JOIN users ON posts."userId" = users.id
     JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE hashtags.name = $1 AND posts."createdAt < $2
+    WHERE hashtags.name = $1 AND posts."createdAt" < $2
     ORDER BY posts."createdAt" DESC LIMIT 10;`,
     [hashtag, timestamp]
   );
