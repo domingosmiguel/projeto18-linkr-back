@@ -1,4 +1,3 @@
-import urlExist from 'url-exist';
 import urlMetadata from 'url-metadata';
 import connection from '../database.js';
 import {
@@ -32,11 +31,8 @@ export async function postTimelinePosts(req, res) {
     );
   }
   try {
-    const urlExists = await urlExist(body.link);
-    if (!urlExists) {
-      return res.sendStatus(400);
-    }
     const metadata = await urlMetadata(body.link);
+
     const userInformations = await connection.query(
       `SELECT * FROM users WHERE id = $1`,
       [userId]
@@ -86,6 +82,9 @@ export async function postTimelinePosts(req, res) {
     return res.sendStatus(201);
   } catch (error) {
     console.log(error);
+    if (error.errno || error.Error) {
+      return res.sendStatus(400);
+    }
     return res.sendStatus(500);
   }
 }
