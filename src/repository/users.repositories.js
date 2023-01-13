@@ -76,7 +76,7 @@ export const getTlPosts = (id) => {
         posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         FALSE AS repost, 
-        'none' AS "reposterName"
+        'none' AS "reposterName", '0' AS "reposterId"
       FROM posts
       JOIN users AS authors ON authors.id = posts."userId"
       JOIN metadatas ON posts.id = metadatas."postId"
@@ -88,11 +88,11 @@ export const getTlPosts = (id) => {
         posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         TRUE AS repost,
-        reposter.username AS "reposterName"
+        reposter.username AS "reposterName", reposter.id AS "reposterId"
       FROM posts
       JOIN users AS authors ON authors.id = posts."userId"
       JOIN metadatas ON posts.id = metadatas."postId"
-      JOIN reposts ON reposts."userId" = posts."userId"
+      JOIN reposts ON reposts."postId" = posts.id
       JOIN users AS reposter ON reposter.id = reposts."userId"
       WHERE reposter.id = ($1)
     )
@@ -108,7 +108,7 @@ export const getMoreTlPosts = (id, timestamp) => {
         posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         FALSE AS repost, 
-        'none' AS "reposterName"
+        'none' AS "reposterName", '0' AS "reposterId"
       FROM posts
       JOIN users AS authors ON authors.id = posts."userId"
       JOIN metadatas ON posts.id = metadatas."postId"
@@ -120,7 +120,7 @@ export const getMoreTlPosts = (id, timestamp) => {
         posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         TRUE AS repost,
-        reposter.username AS "reposterName"
+        reposter.username AS "reposterName", reposter.id AS "reposterId"
       FROM posts
       JOIN users AS authors ON authors.id = posts."userId"
       JOIN metadatas ON posts.id = metadatas."postId"

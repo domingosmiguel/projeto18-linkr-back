@@ -43,7 +43,7 @@ export const timeline = (usersIds) => {
         posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt", 
         metadatas.image, metadatas.title, metadatas.description,
         FALSE AS repost, 
-        'none' AS "reposterName"
+        'none' AS "reposterName", '0' AS "reposterId"
       FROM posts
       JOIN users AS authors ON posts."userId" = authors.id
       JOIN metadatas ON posts.id = metadatas."postId"
@@ -55,7 +55,7 @@ export const timeline = (usersIds) => {
         posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         TRUE AS repost,
-        reposter.username AS "reposterName"
+        reposter.username AS "reposterName", reposter.id AS "reposterId"
       FROM posts
       JOIN users AS authors ON posts."userId" = authors.id
       JOIN metadatas ON posts.id = metadatas."postId"
@@ -75,7 +75,7 @@ export function loadPosts(usersIds, timestamp) {
         posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt", 
         metadatas.image, metadatas.title, metadatas.description,
         FALSE AS repost, 
-        'none' AS "reposterName"
+        'none' AS "reposterName", '0' AS "reposterId"
       FROM posts
       JOIN users AS authors ON posts."userId" = authors.id
       JOIN metadatas ON posts.id = metadatas."postId"
@@ -87,7 +87,7 @@ export function loadPosts(usersIds, timestamp) {
         posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         TRUE AS repost,
-        reposter.username AS "reposterName"
+        reposter.username AS "reposterName", reposter.id AS "reposterId"
       FROM posts
       JOIN users AS authors ON posts."userId" = authors.id
       JOIN metadatas ON posts.id = metadatas."postId"
@@ -136,5 +136,19 @@ export function creatRepost(id, userId) {
   return connection.query(
     `INSERT INTO reposts ("postId", "userId") VALUES ($1, $2);`,
     [id, userId]
+  );
+}
+
+export function countPostReposts(id) {
+  return connection.query(
+    `SELECT COUNT(*) AS number FROM reposts WHERE reposts."postId" = $1;`,
+    [id]
+  );
+}
+
+export function checkRepost(id, userId) {
+  return connection.query(
+    `SELECT * FROM reposts WHERE reposts."userId" = $1 AND reposts."postId" = $2;`,
+    [userId, id]
   );
 }
