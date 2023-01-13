@@ -202,45 +202,20 @@ export async function deletePost(req, res) {
       return res.sendStatus(401);
     }
 
-    const existLikes = await connection.query(`SELECT * FROM "postLikes" WHERE "postId" = $1`,
-    [id]);
-    if(existLikes.rows.length > 0){
-      await connection.query(`DELETE FROM "postLikes" WHERE "postId" = $1`,
+    await connection.query(`DELETE FROM "postLikes" WHERE "postId" = $1`,
       [id])
-    };
-
-    const existMetadatas = await connection.query(`SELECT * FROM metadatas WHERE "postId" = $1`,
-    [id]);
-    if(existMetadatas.rows.length > 0){
-      await connection.query(`DELETE FROM metadatas WHERE "postId" = $1`,
+    
+    await connection.query(`DELETE FROM metadatas WHERE "postId" = $1`,
       [id])
-    };
 
-    const existRepostts = await connection.query(`SELECT * FROM reposts WHERE "postId" = $1`,
-    [id]);
-    if(existRepostts.rows.length > 0){
-      await connection.query(`DELETE FROM reposts WHERE "postId" = $1`,
+    await connection.query(`DELETE FROM reposts WHERE "postId" = $1`,
       [id])
-    };
 
-    const existHashtag = await connection.query(
-      `SELECT * FROM "postHashtags" WHERE "postId" = $1`,
-      [id]
-    );
-    if (existHashtag.rows.length > 0) {
-      await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, [
-        id,
-      ]);
-    }
+    await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, 
+    [id])
 
-    const existComments = await connection.query(
-      `SELECT * FROM comments WHERE "postId" = $1`,
-      [id]
-    );
-    if (existComments.rows.length > 0) {
-      await connection.query(`DELETE FROM comments WHERE "postId" = $1`, [id]);
-    }
-
+    await connection.query(`DELETE FROM comments WHERE "postId" = $1`, [id]);
+    
     await connection.query(`DELETE FROM posts WHERE id = $1`, [id]);
 
     return res.sendStatus(200);
