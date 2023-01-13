@@ -28,7 +28,7 @@ export const timeline = (usersIds) => {
   return connection.query(
     `(
       SELECT authors.username, authors."pictureUrl", 
-      posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt", 
+        posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt", 
         metadatas.image, metadatas.title, metadatas.description,
         FALSE AS repost, 
         'none' AS "reposterName"
@@ -40,7 +40,7 @@ export const timeline = (usersIds) => {
     UNION ALL
     (
       SELECT authors.username, authors."pictureUrl",
-        posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
+        posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         TRUE AS repost,
         reposter.username AS "reposterName"
@@ -60,7 +60,7 @@ export function loadPosts(usersIds, timestamp) {
   return connection.query(
     `(
       SELECT authors.username, authors."pictureUrl", 
-      posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt", 
+        posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt", 
         metadatas.image, metadatas.title, metadatas.description,
         FALSE AS repost, 
         'none' AS "reposterName"
@@ -72,7 +72,7 @@ export function loadPosts(usersIds, timestamp) {
     UNION ALL
     (
       SELECT authors.username, authors."pictureUrl",
-        posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
+        posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
         metadatas.image, metadatas.title, metadatas.description,
         TRUE AS repost,
         reposter.username AS "reposterName"
