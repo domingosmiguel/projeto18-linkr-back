@@ -188,37 +188,40 @@ export async function loadMoreHashtagPosts(req, res) {
 export async function deletePost(req, res) {
   const { id } = req.params;
   const { userId } = res.locals;
-  console.log(userId);
 
   try {
-    const post = await connection.query(`SELECT * FROM posts WHERE id = $1`, [
+    const { rowCount, rows } = await connection.query(
+      `SELECT * FROM posts WHERE id = $1`,
+      [id]
+    );
+    if (!rowCount) {
+      return res.sendStatus(401);
+    }
+
+    if (rows[0].userId !== userId) {
+      return res.sendStatus(401);
+    }
+
+    await connection.query(`DELETE FROM "postLikes" WHERE "postId" = $1`, [id]);
+
+    await connection.query(`DELETE FROM metadatas WHERE "postId" = $1`, [id]);
+
+    await connection.query(`DELETE FROM reposts WHERE "postId" = $1`, [id]);
+
+    await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, [
       id,
     ]);
-    if (post.rows.length === 0) {
-      return res.sendStatus(401);
-    }
-
-    if (post.rows[0].userId !== userId) {
-      return res.sendStatus(401);
-    }
-
-    await connection.query(`DELETE FROM "postLikes" WHERE "postId" = $1`,
-      [id])
-    
-    await connection.query(`DELETE FROM metadatas WHERE "postId" = $1`,
-      [id])
-
-    await connection.query(`DELETE FROM reposts WHERE "postId" = $1`,
-      [id])
-
-    await connection.query(`DELETE FROM "postHashtags" WHERE "postId" = $1`, 
-    [id])
 
     await connection.query(`DELETE FROM comments WHERE "postId" = $1`, [id]);
-    
-    await connection.query(`DELETE FROM posts WHERE id = $1`, [id]);
 
-    return res.sendStatus(200);
+    const {
+      rows: [{ createdAt }],
+    } = await connection.query(
+      `DELETE FROM posts WHERE id = $1 RETURNING "createdAt"`,
+      [id]
+    );
+
+    return res.send({ createdAt });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);
