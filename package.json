@@ -27,7 +27,6 @@
     "joi": "^17.7.0",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.8.0",
-    "url-exist": "^3.0.1",
     "url-metadata": "^2.5.0"
   },
   "devDependencies": {
