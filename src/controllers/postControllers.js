@@ -99,7 +99,6 @@ export async function getTimelinePosts(req, res) {
     let posts = [];
     if (following.length) {
       const { rowCount, rows } = await timeline(following);
-      console.log(rows, 'rows');
       posts = rows.slice(0, 10);
 
       if (rowCount > 10) hasMore = true;
