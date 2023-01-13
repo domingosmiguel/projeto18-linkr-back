@@ -2,8 +2,10 @@ import urlExist from 'url-exist';
 import urlMetadata from 'url-metadata';
 import connection from '../database.js';
 import {
+  checkRepost,
   countNewHashtagPosts,
   countNewPosts,
+  countPostReposts,
   creatRepost,
   getHashtagPostsQuery,
   loadHashtagPosts,
@@ -487,9 +489,22 @@ export async function postRepost(req, res) {
   const { id } = req.params;
   const { userId } = res.locals;
   try {
+    const repost = await checkRepost(id, userId);
+    if (repost.rowCount) return res.sendStatus(404);
     await creatRepost(id, userId);
+    return res.sendStatus(201);
   } catch (error) {
     console.log(error);
-    res.sendStatus(500);
+    return res.sendStatus(500);
+  }
+}
+
+export async function getRepostsNumber(req, res) {
+  const { id } = req.params;
+  try {
+    const number = await countPostReposts(id);
+    return res.send({ number: number.rows[0].number });
+  } catch (error) {
+    return res.sendStatus(500);
   }
 }

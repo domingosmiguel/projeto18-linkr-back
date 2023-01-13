@@ -2,7 +2,7 @@ import connection from '../database.js';
 
 export const createUser = (email, username, hashPassword, pictureUrl) => {
   return connection.query(
-    'INSERT INTO users (username, email, password, "pictureUrl") VALUES ($1, $2, $3, $4)',
+    'INSERT INTO users (username, email, password, "pictureUrl") VALUES ($1, $2, $3, $4);',
     [username, email, hashPassword, pictureUrl]
   );
 };
@@ -12,7 +12,7 @@ export const findUserEmail = (email) => {
 };
 
 export const selectUser = (email) => {
-  return connection.query('SELECT * FROM users WHERE email = $1 LIMIT 1', [
+  return connection.query('SELECT * FROM users WHERE email = $1 LIMIT 1;', [
     email,
   ]);
 };
@@ -21,30 +21,30 @@ export const insertSession = (userId) => {
   return connection.query(
     `INSERT INTO sessions ("userId", "createdAt") 
     VALUES ($1, NOW())
-    RETURNING id`,
+    RETURNING id;`,
     [userId]
   );
 };
 
 export const getUserById = (userId) => {
   return connection.query(
-    'SELECT id, username, "pictureUrl" FROM users WHERE id = $1 LIMIT 1',
+    'SELECT id, username, "pictureUrl" FROM users WHERE id = $1 LIMIT 1;',
     [userId]
   );
 };
 
 export function deleteSession(sessionId) {
-  return connection.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+  return connection.query('DELETE FROM sessions WHERE id = $1;', [sessionId]);
 }
 
 export const getSessionById = (id) => {
-  return connection.query('SELECT * FROM sessions WHERE id = $1', [id]);
+  return connection.query('SELECT * FROM sessions WHERE id = $1;', [id]);
 };
 
 export const getUserByInputSearch = (string) => {
   const search = `%${string}%`;
   return connection.query(
-    'SELECT id, username, "pictureUrl" FROM users WHERE username ILIKE $1',
+    'SELECT id, username, "pictureUrl" FROM users WHERE username ILIKE $1;',
     [search]
   );
 };
@@ -55,7 +55,7 @@ export const getUserURFollowing = (usersIds, userId) => {
     FROM users 
     JOIN follows ON follows.following = users.id
     WHERE follows.following = ANY($1)
-      AND follows.follower = ($2)`,
+      AND follows.follower = ($2);`,
     [usersIds, userId]
   );
 };
@@ -64,51 +64,100 @@ export const getTlUser = (id) => {
   return connection.query(
     `SELECT users.id, users."pictureUrl", users.username
     FROM users
-    WHERE users.id = ($1)`,
+    WHERE users.id = ($1);`,
     [id]
   );
 };
 
 export const getTlPosts = (id) => {
   return connection.query(
-    `SELECT posts.*,
-      metadatas.image, metadatas.title, metadatas.description 
-    FROM posts
-    JOIN users ON users.id = posts."userId"
-    JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE users.id = ($1)
-    ORDER BY posts."createdAt" DESC LIMIT 11`,
+    `(
+      SELECT authors.username, authors."pictureUrl",
+        posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt",
+        metadatas.image, metadatas.title, metadatas.description,
+        FALSE AS repost, 
+        'none' AS "reposterName", '0' AS "reposterId"
+      FROM posts
+      JOIN users AS authors ON authors.id = posts."userId"
+      JOIN metadatas ON posts.id = metadatas."postId"
+      WHERE authors.id = ($1)
+    )
+    UNION ALL
+    (
+      SELECT authors.username, authors."pictureUrl",
+        posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
+        metadatas.image, metadatas.title, metadatas.description,
+        TRUE AS repost,
+        reposter.username AS "reposterName", reposter.id AS "reposterId"
+      FROM posts
+      JOIN users AS authors ON authors.id = posts."userId"
+      JOIN metadatas ON posts.id = metadatas."postId"
+      JOIN reposts ON reposts."postId" = posts.id
+      JOIN users AS reposter ON reposter.id = reposts."userId"
+      WHERE reposter.id = ($1)
+    )
+    ORDER BY "createdAt" DESC LIMIT 11;`,
     [id]
   );
 };
 
 export const getMoreTlPosts = (id, timestamp) => {
   return connection.query(
-    `SELECT posts.*,
-      metadatas.image, metadatas.title, metadatas.description 
-    FROM posts
-    JOIN users ON users.id = posts."userId"
-    JOIN metadatas ON posts.id = metadatas."postId"
-    WHERE users.id = ($1) AND posts."createdAt" < $2
-    ORDER BY posts."createdAt" DESC LIMIT 11`,
+    `(
+      SELECT authors.username, authors."pictureUrl",
+        posts.id, posts."userId", posts.txt, posts.link, posts."createdAt" AS "createdAt",
+        metadatas.image, metadatas.title, metadatas.description,
+        FALSE AS repost, 
+        'none' AS "reposterName", '0' AS "reposterId"
+      FROM posts
+      JOIN users AS authors ON authors.id = posts."userId"
+      JOIN metadatas ON posts.id = metadatas."postId"
+      WHERE authors.id = ($1) AND posts."createdAt" < $2
+    )
+    UNION ALL
+    (
+      SELECT authors.username, authors."pictureUrl",
+        posts.id, posts."userId", posts.txt, posts.link, reposts."createdAt" AS "createdAt",
+        metadatas.image, metadatas.title, metadatas.description,
+        TRUE AS repost,
+        reposter.username AS "reposterName", reposter.id AS "reposterId"
+      FROM posts
+      JOIN users AS authors ON authors.id = posts."userId"
+      JOIN metadatas ON posts.id = metadatas."postId"
+      JOIN reposts ON reposts."userId" = posts."userId"
+      JOIN users AS reposter ON reposter.id = reposts."userId"
+      WHERE reposter.id = ($1) AND reposts."createdAt" < $2
+    )
+    ORDER BY "createdAt" DESC LIMIT 11;`,
     [id, timestamp]
   );
 };
 
 export function countNewUserPosts(id, timestamp) {
   return connection.query(
-    `SELECT COALESCE(COUNT(posts.id), 0) as count
-    FROM posts
-    JOIN users ON users.id = posts."userId"
-    WHERE users.id = $1
-      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.001`,
+    `(
+      SELECT COALESCE(COUNT(posts.id), 0) as count
+      FROM posts
+      JOIN users ON users.id = posts."userId"
+      WHERE users.id = $1
+      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.001
+    )
+    UNION ALL
+    (
+      SELECT COALESCE(COUNT(posts.id), 0) as count
+      FROM posts
+      JOIN users ON users.id = posts."userId"
+      JOIN reposts ON reposts."userId" = posts."userId"
+      WHERE reposts."userId" = $1
+      AND EXTRACT(EPOCH FROM (posts."createdAt" - $2)) > 0.001
+    );`,
     [id, timestamp]
   );
 }
 
 export const likesCount = (postId) => {
   return connection.query(
-    `SELECT COUNT(id) AS count FROM "postLikes" WHERE "postId" = ($1)`,
+    `SELECT COUNT(id) AS count FROM "postLikes" WHERE "postId" = ($1);`,
     [postId]
   );
 };
@@ -121,7 +170,7 @@ export const usersLikes = (postId, userId) => {
     WHERE "postLikes"."postId" = ($1)
       AND NOT "userId" = ($2)
     ORDER BY "postLikes"."postId" 
-    LIMIT 2`,
+    LIMIT 2;`,
     [postId, userId]
   );
 };
@@ -131,7 +180,7 @@ export const userLiked = (postId, userId) => {
     `SELECT COUNT(id) AS liked 
     FROM "postLikes" 
     WHERE "postId" = ($1) 
-      AND "userId" = ($2)`,
+      AND "userId" = ($2);`,
     [postId, userId]
   );
 };
@@ -139,7 +188,7 @@ export const userLiked = (postId, userId) => {
 export const newLike = (postId, userId) => {
   return connection.query(
     `INSERT INTO "postLikes" ("postId", "userId")
-    VALUES ($1, $2)`,
+    VALUES ($1, $2);`,
     [postId, userId]
   );
 };
@@ -148,7 +197,7 @@ export const dislike = (postId, userId) => {
   return connection.query(
     `DELETE FROM "postLikes" 
     WHERE "postId" = ($1)
-      AND "userId" = ($2)`,
+      AND "userId" = ($2);`,
     [postId, userId]
   );
 };
@@ -158,7 +207,7 @@ export const checkFollow = (id, userId) => {
     `SELECT COUNT(id) AS "isFollower"
     FROM follows
     WHERE following = ($1)
-      AND follower = ($2)`,
+      AND follower = ($2);`,
     [id, userId]
   );
 };
@@ -167,7 +216,7 @@ export const newFollower = (id, userId) => {
   return connection.query(
     `INSERT INTO follows (following, follower)
     VALUES ($1, $2)
-    ON CONFLICT (following, follower) DO NOTHING`,
+    ON CONFLICT (following, follower) DO NOTHING;`,
     [id, userId]
   );
 };
@@ -176,7 +225,7 @@ export const rmFollower = (id, userId) => {
   return connection.query(
     `DELETE FROM follows
     WHERE following = ($1)
-      AND follower = ($2)`,
+      AND follower = ($2);`,
     [id, userId]
   );
 };
@@ -185,7 +234,7 @@ export const getFollowing = (userId) => {
   return connection.query(
     `SELECT following
     FROM follows
-    WHERE follower = ($1)`,
+    WHERE follower = ($1);`,
     [userId]
   );
 };
